@@ -12,7 +12,7 @@
 int main(int argc, char** argv){
 
     if(argc>1){
-        kips(argv[1]);
+        quetzal(argv[1]);
     }
     else{
         printf("No input file given!\n");
