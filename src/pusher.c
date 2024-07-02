@@ -73,7 +73,7 @@ REAL** solve(input_t* input){
             if(!(i%input->diag_freq)){
                 write_fields(input, fields, i);
                 write_solution(input, species, i);
-                write_sources(input, sources, i);
+                write_sources(input, sources_aux, i);
                 printf("Timestep %d\r",i);
                 fflush(stdout);
             }

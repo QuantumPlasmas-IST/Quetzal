@@ -4,6 +4,7 @@
 #include "aux.h"
 #include "compile.h"
 #include "utilities.h"
+#include <gsl/gsl_sf_fermi_dirac.h>
 
 void apply_init_cond(input_t* input, REAL** species);
 void field_init_cond(input_t* input, COMPLEX** fields);
@@ -18,8 +19,10 @@ REAL linear_bose(int n, REAL* x, REAL* p);
 REAL quad_bose(int n, REAL* x, REAL* p);
 REAL linear_maxwell(int n, REAL* x, REAL* p);
 REAL quad_maxwell(int n, REAL* x, REAL* p);
+REAL double_quad_maxwell(int n, REAL* x, REAL* p);
 REAL circle(int n, REAL* x, REAL* p);
 REAL sphere(int n, REAL* x, REAL* p);
+REAL flattened_quad_fermi(int n, REAL* x, REAL* p);
 
 
 #endif

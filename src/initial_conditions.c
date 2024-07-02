@@ -71,11 +71,18 @@ REAL uniform(int n, REAL* x, REAL* p){
     return p[0];
 }
 
-REAL double_gaussian(int n, REAL* x, REAL* p){
+REAL double_quad_maxwell(int n, REAL* x, REAL* p){
     REAL aux = x[0];
     REAL m1 = quad_maxwell(n, x, p);
     x[0] = aux;
     return quad_maxwell(n, x, p+2+n) + m1;
+}
+
+REAL double_gaussian(int n, REAL* x, REAL* p){
+    REAL aux = x[0];
+    REAL m1 = gaussian(n, x, p);
+    x[0] = aux;
+    return gaussian(n, x, p+2+n) + m1;
 }
 
 REAL noise(int n, REAL* x, REAL* p){
@@ -149,4 +156,13 @@ REAL circle(int n, REAL* x, REAL* p){
 REAL sphere(int n, REAL* x, REAL* p){
     if (x[0] > p[1]) return 0;
     return 3*p[0] / (4 * p[1]) * sqrt(1-x[0]*x[0]/(p[1]*p[1]));
+}
+
+REAL flattened_quad_fermi(int n, REAL* x, REAL* p){
+    x[0] = (x[0] - p[2])*(x[0] - p[2]);
+    for(int i = 1; i < n; ++i){
+        x[0] += (x[i] - p[2+i])*(x[i] - p[2+i]);
+    }
+
+    return sqrt(2*M_PI*p[1]) * gsl_sf_fermi_dirac_mhalf(-(x[0]/2 - p[0]) / p[1]);
 }

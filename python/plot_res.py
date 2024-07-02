@@ -5,8 +5,8 @@ import h5py
 import scipy as scp
 
 #############################
-name = 'anomalous2'
-iter = 0
+name = 'dispersion_2DFermiQuadratic'
+iter = 10000
 #############################
 
 # Allows the use of LateX notation in labels
@@ -25,8 +25,8 @@ def func2(x):
 file=h5py.File('./output/'+name+'.h5','r')
 
 positrons = file['/Species'+str(iter)][0]
-electrons = file['/Species'+str(iter)][1]
-potential = file['/Fields'+str(iter)][1]['real']
+#electrons = file['/Species'+str(iter)][1]
+potential = file['/Fields'+str(iter)][0]['real']
 pot_im = file['/Fields'+str(iter)][0]['imaginary']
 charge = file['/Sources'+str(iter)][0]['real']
 charge_im = file['/Sources'+str(iter)][0]['imaginary']
@@ -40,7 +40,7 @@ dx = file.attrs['Position Delta'][0]
 dt = file.attrs['Time Delta']
 
 fig, axs = plt.subplots(layout='constrained')
-sc = plt.imshow(electrons.T, extent = (pos_min-0.05,pos_max+0.05,mom_min-0.05,mom_max+0.05), aspect='auto', origin = 'lower')
+sc = plt.imshow(positrons.T, extent = (pos_min-0.05,pos_max+0.05,mom_min-0.05,mom_max+0.05), aspect='auto', origin = 'lower')
 #plt.tight_layout()
 #plt.plot(np.linspace(pos_min,pos_max,pos_num), species[:,50], c='b')
 plt.scatter(np.linspace(pos_min,pos_max,pos_num), scale*potential, c='r', s=0.2)

@@ -8,7 +8,7 @@ COMPLEX poisson_2D(int n_dims, COMPLEX density, REAL* wavevector){
     q = sqrt(q);
 
     if (q < 1e-8) return 0;
-    return density/q;
+    return density/(2*q);
 }
 
 COMPLEX poisson_3D(int n_dims, COMPLEX density, REAL* wavevector){

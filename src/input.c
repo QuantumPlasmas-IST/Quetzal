@@ -205,6 +205,13 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
                 mom_param_count++;
             }
         }
+        if(!strcmp(input->mom_init_names[i],"flattened quadratic fermi")){
+            input->mom_inits[i]=&flattened_quad_fermi;
+            for (int j = 0; j < 2+input->mom_dims; ++j){
+                input->mom_init_params[i][j]=mom_parameters[mom_param_count];
+                mom_param_count++;
+            }
+        }
         if(!strcmp(input->mom_init_names[i],"linear bose")){
             input->mom_inits[i]=&linear_bose;
             for (int j = 0; j < 2+input->mom_dims; ++j){
