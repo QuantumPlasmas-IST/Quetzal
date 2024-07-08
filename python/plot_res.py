@@ -5,8 +5,8 @@ import h5py
 import scipy as scp
 
 #############################
-name = 'dispersion_2DFermiQuadratic'
-iter = 10000
+name = 'dispersion_3DMaxwellQuadratic4'
+iter = 2000
 #############################
 
 # Allows the use of LateX notation in labels

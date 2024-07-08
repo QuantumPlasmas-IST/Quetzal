@@ -84,7 +84,7 @@ REAL** solve(input_t* input){
         for(int i = 0; i < input->n_timesteps; ++i){
             if(!(i%input->diag_freq)){
                 write_fields(input, fields, i);
-                write_solution(input, species, i);
+                //write_solution(input, species, i);
                 write_sources(input, sources_aux, i);
                 printf("Timestep %d\r",i);
                 fflush(stdout);
@@ -270,7 +270,7 @@ void finite_volume2(input_t* input, REAL** species, COMPLEX** fields, int* aux_i
             // Calculate velocity of this momentum point
             axis_index(input->mom_dims, input->pos_points + input->pos_dims, aux_is + input->pos_dims, k);
             for(int mdim = 0; mdim < input->mom_dims; ++mdim){
-                aux_momentum[mdim] = input->mom_min[mdim] + aux_is[mdim+input->pos_dims] * input->mom_delta[mdim];
+                aux_momentum[mdim] = input->mom_min[mdim] + (aux_is[mdim+input->pos_dims] - input->padding) * input->mom_delta[mdim];
             }           
             input->dispersions[i](input->pos_dims, input->mom_dims, aux_momentum); 
 

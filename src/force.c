@@ -1,6 +1,8 @@
 #include "force.h"
 
 REAL gradient_force(input_t* input, COMPLEX** fields, int fld, int j, int k, int dim){
+
+    if(dim>=input->pos_dims) return 0;
     
     REAL forw = creal(fields[fld][j + input->space_factor[dim]]);
     REAL back = creal(fields[fld][j - input->space_factor[dim]]);
