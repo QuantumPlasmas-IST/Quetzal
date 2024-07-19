@@ -7,11 +7,12 @@ import scipy.optimize as opt
 import mpmath as mpm
 
 #############################
-name = 'dispersion_2DFermiLinear4'
-T = 0.05
-u = 0.05
-wpe = np.sqrt(2)
+name = 'dispersion_2DMaxwellQuadratic0'
+T = 0.01
+u = 0.005
 ge = np.pi
+
+wp2 = 1
 #############################
 
 # Allows the use of LateX notation in labels
@@ -82,9 +83,9 @@ beta = (T**2) * ((np.pi**2)/6 + (u/T)**2 / 2)
 qs = np.linspace(0,50,1000)
 
 sc = plt.imshow(np.log10(Srho+1e-5), extent = (-kmax/2-dk/2,kmax/2-dk/2,-wmax/2-dw/2,wmax/2-dw/2), aspect='auto', origin = 'lower')
-#plt.plot(qs, np.sqrt(wpe**2 + 3 * T * qs**2), c = 'r') # 3D quadratic
-#plt.plot(qs, np.sqrt(ge * alpha * qs + 3*beta/alpha * qs**2), c = 'r')     # 2D quadratic
-plt.plot(qs, np.sqrt(ge * alpha / 2 * qs + 3/4 * qs**2), c = 'r')    # 2D linear
+plt.plot(qs, np.sqrt(wp2 * qs + 3 * T * qs**2), c = 'r')                    # 2D Maxwell
+#plt.plot(qs, np.sqrt(ge * alpha * qs + 3*beta/alpha * qs**2), c = 'r')     # 2D Fermi
+plt.plot(qs, qs, c = 'r')     # Damping threshold
 plt.xlim((-10,10))
 plt.ylim((0,6))
 #plt.clim((-10,7))
@@ -96,9 +97,9 @@ plt.savefig("./img/"+name+"_chargeFFT.png", dpi=200)
 plt.close()
 
 sc = plt.imshow(np.log10(Sphi+1e-5), extent = (-kmax/2-dk/2,kmax/2-dk/2,-wmax/2-dw/2,wmax/2-dw/2), aspect='auto', origin = 'lower')
-#plt.plot(qs, np.sqrt(wpe**2 + 3 * T * qs**2), c = 'r') # 3D quadratic
-#plt.plot(qs, np.sqrt(ge * alpha * qs + 3*beta/alpha * qs**2), c = 'r')     # 2D quadratic
-plt.plot(qs, np.sqrt(ge * alpha / 2 * qs + 3/4 * qs**2), c = 'r')    # 2D linear
+plt.plot(qs, np.sqrt(wp2 * qs + 3 * T * qs**2), c = 'r')                    # 2D Maxwell
+#plt.plot(qs, np.sqrt(ge * alpha * qs + 3*beta/alpha * qs**2), c = 'r')     # 2D Fermi
+plt.plot(qs, qs, c = 'r')     # Damping threshold
 plt.xlim((-10,10))
 plt.ylim((0,6))
 plt.xlabel(r"$k_x$[$\omega_{pe} c^{-1}$]")
@@ -114,8 +115,8 @@ omega = np.argmax(Srho[n_figs//2: , (pos_num-4)//2:], axis = 0) * dw
 
 def disp_rel(x, a, b):
     #return a*x+b*x*x
-    #return np.pi*a*x+3*b/a*x*x-9*b*b/(a*a*a*np.pi)*x*x*x + 54*b*b*b/(a**5 * np.pi*np.pi)*x*x*x*x
-    return np.pi/2*a*x + 3/4*b*b*x*x - 9 * b**4 * x**3/(8 * a * np.pi) + 27 * b**6 * x**4/(8 * a*a * np.pi**2)
+    return np.pi*a*x+3*b/a*x*x
+    #return np.pi/2*a*x + 3/4*b*b*x*x - 9 * b**4 * x**3/(8 * a * np.pi) + 27 * b**6 * x**4/(8 * a*a * np.pi**2)
 
 limit=10
 if(name == 'dispersion_2DFermiQuadratic0'):
@@ -133,7 +134,7 @@ if(name == 'dispersion_2DFermiQuadratic5'):
 if(name == 'dispersion_2DFermiQuadratic6'):
     limit = 10
 if(name == 'dispersion_2DFermiQuadratic7'):
-    limit = 10
+    limit = 8
 
 if(name == 'dispersion_3DMaxwellQuadratic0'):
     limit = 9
@@ -150,7 +151,7 @@ params, cov = opt.curve_fit(disp_rel,kays[1:limit],omega[1:limit]**2)
 
 plt.plot(kays, omega)
 plt.plot(kays[:limit], np.sqrt(disp_rel(kays[:limit],params[0],params[1])))
-plt.plot(kays[:limit], np.sqrt(disp_rel(kays[:limit],alpha,beta)))
+plt.plot(kays[:2*limit], np.sqrt(disp_rel(kays[:2*limit],alpha,beta)))
 plt.xlim((0,5))
 plt.tight_layout()
 plt.savefig("./img/"+name+"_omega.png", dpi=200)
@@ -161,6 +162,8 @@ print(params[1])
 print()
 print(alpha)
 print(beta)
+fit_alpha = params[0]
+fit_beta = params[1]
 
 Drho = np.abs(scp.fft.fftshift(scp.fft.fft(rho,axis=-1),axes=-1))
 Dphi = np.abs(scp.fft.fftshift(scp.fft.fft(phi,axis=-1),axes=-1))
@@ -197,11 +200,11 @@ def damping_rate(func_k, func_u, func_T):
     func_beta = (func_T**2) * ((np.pi**2)/6 + (func_u/func_T)**2 / 2) 
     func_w = np.sqrt(ge * func_alpha * func_k + 3 * func_beta / func_alpha * func_k**2)
     func_p = func_w/func_k
-    return np.pi * func_w / (4 * func_k) * (fermi_dirac_derivative(func_p, func_u, func_T)+fermi_dirac_derivative(func_p, -func_u, func_T))
+    return np.pi * func_w / (4*func_k) * float(-mpm.fabs(fermi_dirac_derivative(func_p, func_u, func_T)+fermi_dirac_derivative(func_p, -func_u, func_T)))
 
 exp_damps = np.zeros(50)
 
-ptest=15
+ptest=10
 
 for it in range(30):
 
@@ -240,7 +243,7 @@ for it in range(30):
     else:
         params, covs = opt.curve_fit(line, times[cond_min:cond_max], signal_filtered[cond_min:cond_max])"""
     
-    if(slic<5):
+    if(slic<0):
         params, covs = opt.curve_fit(line, times[1:cond_max], signal_filtered[1:cond_max])
     else:
         peaks,_ = scp.signal.find_peaks(signal_raw)
@@ -275,11 +278,11 @@ for it in range(30):
     
 
 
-th_damps = np.zeros(200)
-for i in range(200):
-    th_damps[i] = damping_rate(np.linspace(1,50,200,endpoint=True)[i]*dk,u,T)
+th_damps = np.zeros(50)
+for i in range(50):
+    th_damps[i] = damping_rate(np.linspace(1,50,50,endpoint=True)[i]*dk,u,T)
 
-plt.plot(np.linspace(1,50,200,endpoint=True)*dk, -th_damps)
+plt.plot(np.linspace(1,50,50,endpoint=True)*dk*2, -2*th_damps)
 plt.scatter(np.linspace(1,50,50,endpoint=True)*dk, -exp_damps,c='r',s=100,marker='+',linewidths=1)
 plt.scatter(np.array([ptest])*dk, -exp_damps[ptest-1])
 #plt.yscale('log')

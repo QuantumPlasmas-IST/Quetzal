@@ -77,7 +77,7 @@ Srho = np.abs(Frho)**2
 Sphi = np.abs(Fphi)**2
 
 alpha = T * np.log(2+2*np.cosh(u/T))
-beta = (T**2) * ((np.pi**2)/6 + (u/T)**2 / 2) 
+beta = 1 
 
 qs = np.linspace(0,50,1000)
 
@@ -85,6 +85,7 @@ sc = plt.imshow(np.log10(Srho+1e-5), extent = (-kmax/2-dk/2,kmax/2-dk/2,-wmax/2-
 #plt.plot(qs, np.sqrt(wpe**2 + 3 * T * qs**2), c = 'r') # 3D quadratic
 #plt.plot(qs, np.sqrt(ge * alpha * qs + 3*beta/alpha * qs**2), c = 'r')     # 2D quadratic
 plt.plot(qs, np.sqrt(ge * alpha / 2 * qs + 3/4 * qs**2), c = 'r')    # 2D linear
+plt.plot(qs, qs, c = 'g')    # Damp threshold
 plt.xlim((-10,10))
 plt.ylim((0,6))
 #plt.clim((-10,7))
@@ -99,6 +100,7 @@ sc = plt.imshow(np.log10(Sphi+1e-5), extent = (-kmax/2-dk/2,kmax/2-dk/2,-wmax/2-
 #plt.plot(qs, np.sqrt(wpe**2 + 3 * T * qs**2), c = 'r') # 3D quadratic
 #plt.plot(qs, np.sqrt(ge * alpha * qs + 3*beta/alpha * qs**2), c = 'r')     # 2D quadratic
 plt.plot(qs, np.sqrt(ge * alpha / 2 * qs + 3/4 * qs**2), c = 'r')    # 2D linear
+plt.plot(qs, qs, c = 'g')    # Damp threshold
 plt.xlim((-10,10))
 plt.ylim((0,6))
 plt.xlabel(r"$k_x$[$\omega_{pe} c^{-1}$]")
@@ -115,7 +117,7 @@ omega = np.argmax(Srho[n_figs//2: , (pos_num-4)//2:], axis = 0) * dw
 def disp_rel(x, a, b):
     #return a*x+b*x*x
     #return np.pi*a*x+3*b/a*x*x-9*b*b/(a*a*a*np.pi)*x*x*x + 54*b*b*b/(a**5 * np.pi*np.pi)*x*x*x*x
-    return np.pi/2*a*x + 3/4*b*b*x*x - 9 * b**4 * x**3/(8 * a * np.pi) + 27 * b**6 * x**4/(8 * a*a * np.pi**2)
+    return np.sqrt(np.pi/2*a*x + 3/4*b*b*x*x)
 
 limit=10
 if(name == 'dispersion_2DFermiQuadratic0'):
@@ -146,11 +148,11 @@ if(name == 'dispersion_3DMaxwellQuadratic3'):
 if(name == 'dispersion_3DMaxwellQuadratic4'):
     limit = 10
 
-params, cov = opt.curve_fit(disp_rel,kays[1:limit],omega[1:limit]**2)
+params, cov = opt.curve_fit(disp_rel,kays[1:limit],omega[1:limit])
 
 plt.plot(kays, omega)
 plt.plot(kays[:limit], np.sqrt(disp_rel(kays[:limit],params[0],params[1])))
-plt.plot(kays[:limit], np.sqrt(disp_rel(kays[:limit],alpha,beta)))
+plt.plot(kays[:2*limit], np.sqrt(disp_rel(kays[:2*limit],alpha,beta)))
 plt.xlim((0,5))
 plt.tight_layout()
 plt.savefig("./img/"+name+"_omega.png", dpi=200)
