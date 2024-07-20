@@ -3,6 +3,9 @@
 
 #include "aux.h"
 #include "hdf5.h"
+#include "mpi.h"
+#include "H5FDmpio.h"
+#include "H5FDmpi.h"
 
 typedef struct hdf5_complex{
     REAL re;

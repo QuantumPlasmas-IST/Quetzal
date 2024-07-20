@@ -8,6 +8,7 @@
 #include "output.h"
 #include "algos.h"
 #include "math.h"
+#include "mpi.h"
 
 REAL** solve(input_t* input);
 
