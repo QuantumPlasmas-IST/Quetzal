@@ -22,5 +22,5 @@ void finite_volumeNL2(input_t* input, REAL** species, COMPLEX** fields, int* aux
 
 // Time Pushers
 void leapfrog(input_t* input, REAL** species, REAL** aux1, REAL** aux2, COMPLEX**fields, int* aux_is);
-void rungeKutta2(input_t* input, REAL** species, REAL** aux1, REAL** aux2, COMPLEX** sources, COMPLEX** sources_aux, COMPLEX** fields, REAL*** flows, int* aux_is, REAL* aux_momentum);
+void rungeKutta2(input_t* input, REAL** species, REAL** aux1, REAL** aux2, COMPLEX** sources, COMPLEX** sources_aux, COMPLEX** fields, REAL*** flows, int* aux_is, REAL* aux_momentum, REAL*** left_buffer, REAL*** right_buffer);
 #endif

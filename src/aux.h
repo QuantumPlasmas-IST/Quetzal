@@ -77,6 +77,12 @@ typedef struct input{
     int* grid_factor;
     int* space_factor;
 
+    int rank;
+    int size;
+    int* procs;
+    int* parallel_pos;
+    int* parallel_factor;
+
 } input_t;
 
 typedef REAL(*force_t)(input_t*, COMPLEX**, int, int, int, int); //type: pointer to force function

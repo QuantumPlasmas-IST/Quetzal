@@ -3,6 +3,7 @@
 #define STR_SIZE 50
 
 void open_file(input_t* input){
+
     herr_t status;
     hid_t attribute_id;
 
@@ -18,7 +19,11 @@ void open_file(input_t* input){
     hsize_t str_dim_mom_params[] = {input->mom_dims, NPARAMS, STR_SIZE};
     hsize_t str_dim_fields[] = {input->n_fields, STR_SIZE};
 
-    hid_t file_id = H5Fcreate(input->filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    hid_t fapl_id = H5Pcreate(H5P_FILE_ACCESS);
+    H5Pset_fapl_mpio(fapl_id, MPI_COMM_WORLD, MPI_INFO_NULL);
+    hid_t file_id = H5Fcreate(input->filename, H5F_ACC_TRUNC, H5P_DEFAULT, fapl_id);
+
+    /*
 
     hid_t scalar_dataspace_id = H5Screate(H5S_SCALAR);
     hid_t pos_dims_dataspace_id = H5Screate_simple(1, dim_pos_dims, NULL);
@@ -113,6 +118,7 @@ void open_file(input_t* input){
     status = H5Sclose(string_mom_params_dataspace_id);
     status = H5Sclose(string_fields_dataspace_id);
 
+    */
 
     status = H5Fclose(file_id);
 }
@@ -164,27 +170,74 @@ void write_fields(input_t* input, COMPLEX** fields, int timestep){
 }
 
 
-void write_sources(input_t* input, COMPLEX** sources, int timestep){
+void write_sources(input_t* input, COMPLEX** sources, COMPLEX** aux, int* indices, int timestep){
 
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    // Eliminate ghost cells
+    for(int k = 0; k < input->n_species; ++k){
+        boundary_shift(input, sources[k], aux[k], indices);
+    }
+
+    // Create complex IO datatype
     hid_t complex_id = H5Tcreate (H5T_COMPOUND, sizeof (hdf5_complex_t));
     H5Tinsert (complex_id, "real", HOFFSET(hdf5_complex_t, re), H5T_NATIVE_REAL);
     H5Tinsert (complex_id, "imaginary", HOFFSET(hdf5_complex_t, im), H5T_NATIVE_REAL);
 
-    hid_t file_id, dataspace_id, dataset_id;
+    // Declare ID and error variables
+    hid_t file_id, dataspace_id, dataset_id, fapl_id, xf_id;
     herr_t status;
 
-    file_id = H5Fopen(input->filename, H5F_ACC_RDWR, H5P_DEFAULT);
+    // Open File
+    fapl_id = H5Pcreate(H5P_FILE_ACCESS);
+    H5Pset_fapl_mpio(fapl_id, MPI_COMM_WORLD, MPI_INFO_NULL);
+    file_id = H5Fopen(input->filename, H5F_ACC_RDWR, fapl_id);
     
+    /*// Create parallel access to file and dataset
     char* name = malloc(50);
     sprintf(name, "/Sources%d", timestep);
-
     hsize_t dims[] = {input->n_species, input->pos_total};
     dataspace_id = H5Screate_simple(2, dims, NULL);
     dataset_id = H5Dcreate2(file_id, name, complex_id, dataspace_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    status = H5Dwrite(dataset_id, complex_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, sources[0]);
+    xf_id = H5Pcreate(H5P_DATASET_XFER);
+    H5Pset_dxpl_mpio(xf_id, H5FD_MPIO_INDEPENDENT);
+
+    // Select parallel subset
+    hsize_t offset[2];
+    hsize_t stride[2];
+    hsize_t count[2];
+    hsize_t block[2];
+    offset[0] = 0;
+    stride[0] = 1;
+    count[0] = 1;
+    block[0] = input->n_species;
+    offset[1] = input->rank * (input->pos_points[input->pos_dims-1]-2*input->padding);
+    stride[1] = (input->size-1)*offset[1];
+    count[1] = 1;
+    block[1] = (input->pos_points[input->pos_dims-1]-2*input->padding);
+    for(int i = 0; i < input->pos_dims-1; ++i){
+        count[1] *= (input->pos_points[i]-2*input->padding);
+    }
+    
+    hid_t memspace_id = H5Screate_simple (2, block, NULL);
+    status = H5Sselect_hyperslab (dataspace_id, H5S_SELECT_SET, offset, stride, count, block);
+
+    // Write to file
+    status = H5Dwrite(dataset_id, complex_id, memspace_id, dataspace_id, xf_id, aux[0]);
+    
+    // Close all spaces
     status = H5Dclose(dataset_id);
     status = H5Sclose(dataspace_id);
-
+    status = H5Sclose(memspace_id);
+    status = H5Pclose(fapl_id);
+    status = H5Pclose(xf_id);*/
     status = H5Fclose(file_id);
-    free(name);
+
+    for(int k = 0; k < input->n_species; ++k){
+        inverse_boundary_shift(input, aux[k], sources[k], indices);
+    }
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    
+    //free(name);
 }

@@ -4,10 +4,28 @@
 
 void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters, REAL* field_parameters){
 
+    int processes = 1;
+    for(int i = 0; i < input->pos_dims; ++i){
+        processes *= input->procs[i];
+    }
+    if(!(input->rank || processes==input->size)){
+        printf("Wrong Number of Processes Given!\n");
+        return;
+    }
+    for(int i = 0; i < input->pos_dims; ++i){
+        processes /= input->procs[i];
+        input->parallel_factor[i] = processes;
+    }
+
+    axis_index(input->pos_dims, input->procs, input->parallel_pos, input->rank);
+
     input->pos_delta = malloc(input->pos_dims * sizeof(REAL));
     input->mom_delta = malloc(input->mom_dims * sizeof(REAL));
     for(int i = 0; i < input->pos_dims; ++i){
         input->pos_delta[i] = (input->pos_max[i]-input->pos_min[i])/input->pos_points[i];
+        input->pos_points[i] = input->pos_points[i]/input->procs[i];
+        input->pos_min[i] += input->parallel_pos[i] * input->pos_points[i] * input->pos_delta[i];
+        input->pos_max[i] = input->pos_min[i] + input->pos_points[i]*input->pos_delta[i];
         input->pos_points[i] += 2 * input->padding;
     }
     for(int i = 0; i < input->mom_dims; ++i){
@@ -257,9 +275,15 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
     }
 }
 
-input_t* read_input(const char* name){
+input_t* read_input(const char* name, int rank, int size){
     
     input_t* input = malloc(sizeof(input_t));
+
+    input->rank = rank;
+    input->size = size;
+    input->procs = NULL;
+    input->parallel_pos = NULL;
+    input->parallel_factor = NULL;
 
     input->filename = malloc(200);
     input->pos_dims = 0;
@@ -362,6 +386,11 @@ input_t* read_input(const char* name){
                     strcpy(num_part, "");
                     count++;
                 }   
+                if(!strcmp(txt_part,"PROCS")){
+                    (input->procs)[count] = atoi(num_part);     // Character (,) pushes back new value of max to array
+                    strcpy(num_part, "");
+                    count++;
+                }   
                 if(!strcmp(txt_part,"MOM_MAX")){
                     (input->mom_max)[count] = atof(num_part);   // Character (,) pushes back new value of min to array
                     strcpy(num_part, "");
@@ -447,6 +476,10 @@ input_t* read_input(const char* name){
             }
 
             input->pos_bounds = malloc((input->pos_dims)*sizeof(bound_t));
+
+            input->procs = malloc(input->pos_dims * sizeof(int));
+            input->parallel_pos = malloc(input->pos_dims * sizeof(int));
+            input->parallel_factor = malloc(input->pos_dims * sizeof(int));
         }
 
         if(!strcmp(txt_part,"MOM_DIMS")){
@@ -551,6 +584,7 @@ input_t* read_input(const char* name){
         if(!strcmp(txt_part,"N_TIMESTEPS")) input->n_timesteps = atoi(num_part);
         if(!strcmp(txt_part,"POS_MIN")) input->pos_min[count] = atof(num_part);
         if(!strcmp(txt_part,"POS_MAX")) input->pos_max[count] = atof(num_part);
+        if(!strcmp(txt_part,"PROCS")) input->procs[count] = atoi(num_part);
         if(!strcmp(txt_part,"MOM_MIN")) input->mom_min[count] = atof(num_part);
         if(!strcmp(txt_part,"MOM_MAX")) input->mom_max[count] = atof(num_part);
         if(!strcmp(txt_part,"POS_INIT")) strcpy((input->pos_init_names)[count], num_part);

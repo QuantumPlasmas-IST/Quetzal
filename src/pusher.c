@@ -9,16 +9,34 @@ REAL** solve(input_t* input){
     REAL** species_aux2 = malloc(input->n_species * sizeof(REAL*));
 
     COMPLEX** fields = malloc(input->n_fields * sizeof(COMPLEX*));
+    COMPLEX** fields_aux = malloc(input->n_species * sizeof(COMPLEX*));
 
     COMPLEX** sources = malloc(input->n_fields * sizeof(COMPLEX*));
     COMPLEX** sources_aux = malloc(input->n_species * sizeof(COMPLEX*));
 
     REAL*** flows = malloc(input->n_species * sizeof(REAL**));
 
+    REAL*** left_ghost_buffer = malloc(input->pos_dims * sizeof(REAL**));
+    REAL*** right_ghost_buffer = malloc(input->pos_dims * sizeof(REAL**));
+
+    for(int i = 0; i < input->pos_dims; ++i){
+
+        int buffer_size = input->pos_total*input->mom_total / input->pos_points[i];
+
+        left_ghost_buffer[i]   =  malloc(input->padding * sizeof(REAL*));
+        right_ghost_buffer[i]  =  malloc(input->padding * sizeof(REAL*));
+
+        for(int p = 0; p < input->padding; ++p){
+            left_ghost_buffer[i][p]   =  malloc(buffer_size * sizeof(REAL));
+            right_ghost_buffer[i][p]  =  malloc(buffer_size * sizeof(REAL));
+        }
+    }
+
     species[0] = malloc(input->n_species * input->pos_total * input->mom_total * sizeof(REAL));
     species_aux1[0] = malloc(input->n_species * input->pos_total * input->mom_total * sizeof(REAL));
     species_aux2[0] = malloc(input->n_species * input->pos_total * input->mom_total * sizeof(REAL));
     sources_aux[0] = malloc(input->n_species * input->pos_total * sizeof(COMPLEX));
+    fields_aux[0] = calloc(input->n_species * input->pos_total, sizeof(COMPLEX));
     sources[0] = malloc(input->n_fields * input->pos_total * sizeof(COMPLEX));
     fields[0] = malloc(input->n_fields * input->pos_total * sizeof(COMPLEX));
 
@@ -27,6 +45,7 @@ REAL** solve(input_t* input){
         species_aux1[i] = species_aux1[0] + i * input->pos_total * input->mom_total;
         species_aux2[i] = species_aux2[0] + i * input->pos_total * input->mom_total;
         sources_aux[i] = sources_aux[0] + i * input->pos_total;
+        fields_aux[i] = fields_aux[0] + i * input->pos_total;
 
         flows[i] = malloc((input->pos_dims + input->mom_dims) * sizeof(REAL*));
         for(int dim = 0; dim < input->pos_dims+input->mom_dims; ++dim){
@@ -42,7 +61,7 @@ REAL** solve(input_t* input){
     int* is = malloc(sizeof(int) * (input->pos_dims+input->mom_dims));
     REAL* aux_momentum = malloc(input->mom_dims * sizeof(REAL));
 
-    printf("Memory Allocation Complete\n");
+    if(!input->rank) printf("Memory Allocation Complete\n");
     // Memory successfully allocated *thumbs up emoji* //
 
     // Applying initial conditions //
@@ -51,46 +70,28 @@ REAL** solve(input_t* input){
     apply_init_cond(input, species_aux1);
     apply_init_cond(input, species_aux2);
     field_init_cond(input, fields);
-    apply_bound_cond(input, species);
-    apply_bound_cond(input, species_aux1);
-    apply_bound_cond(input, species_aux2);
+    apply_bound_cond(input, species, left_ghost_buffer, right_ghost_buffer);
+    apply_bound_cond(input, species_aux1, left_ghost_buffer, right_ghost_buffer);
+    apply_bound_cond(input, species_aux2, left_ghost_buffer, right_ghost_buffer);
     integrate_source(input, species, sources, sources_aux);
 
     // Algorithm //
 
-    printf("Initialization Complete\n");
-
-    if(!strcmp(input->pusher,"leapfrog")){
-        for(int i = 0; i < input->n_timesteps; ++i){
-            convolute_field(input, sources, fields);
-            leapfrog(input, species, species_aux1, species_aux2, fields, is);
-            REAL** swap = species;
-            species = species_aux2;
-            species_aux2 = species_aux1;
-            species_aux1 = swap;
-            apply_bound_cond(input, species);
-            integrate_source(input, species, sources, sources_aux);
-            if(!(i%input->diag_freq)){
-                write_fields(input, fields, i);
-                write_solution(input, species, i);
-                write_sources(input, sources_aux, i);
-                printf("Timestep %d\r",i);
-                fflush(stdout);
-            }
-        }
-    }
+    if(!input->rank) printf("Initialization Complete\n");
 
     if(!strcmp(input->pusher,"runge kutta")){
         for(int i = 0; i < input->n_timesteps; ++i){
             if(!(i%input->diag_freq)){
-                write_fields(input, fields, i);
+                //write_fields(input, fields, i);
                 //write_solution(input, species, i);
-                write_sources(input, sources_aux, i);
-                printf("Timestep %d\r",i);
-                fflush(stdout);
+                write_sources(input, sources_aux, fields_aux, is, i);
+                if(!input->rank){
+                    printf("Timestep %d\r",i); //Switch back to \r
+                    fflush(stdout);
+                }
             }
-            rungeKutta2(input, species, species_aux1, species_aux2, sources, sources_aux, fields, flows, is, aux_momentum);
-            apply_bound_cond(input, species);
+            rungeKutta2(input, species, species_aux1, species_aux2, sources, sources_aux, fields, flows, is, aux_momentum, left_ghost_buffer, right_ghost_buffer);
+            apply_bound_cond(input, species, left_ghost_buffer, right_ghost_buffer);
         }
     }
 
@@ -426,7 +427,7 @@ void finite_volumeNL2(input_t* input, REAL** species, COMPLEX** fields, int* aux
     }
 }
 
-void rungeKutta2(input_t* input, REAL** species, REAL** aux1, REAL** aux2, COMPLEX** sources, COMPLEX** sources_aux, COMPLEX** fields, REAL*** flows, int* aux_is, REAL* aux_momentum){
+void rungeKutta2(input_t* input, REAL** species, REAL** aux1, REAL** aux2, COMPLEX** sources, COMPLEX** sources_aux, COMPLEX** fields, REAL*** flows, int* aux_is, REAL* aux_momentum, REAL*** left_buffer, REAL*** right_buffer){
     
     integrate_source(input, species, sources, sources_aux);
     convolute_field(input, sources, fields);
@@ -443,7 +444,7 @@ void rungeKutta2(input_t* input, REAL** species, REAL** aux1, REAL** aux2, COMPL
         }
     }
 
-    apply_bound_cond(input, aux1);
+    apply_bound_cond(input, aux1, left_buffer, right_buffer);
     integrate_source(input, aux1, sources, sources_aux);
     convolute_field(input, sources, fields);
     finite_volume2(input, aux1, fields, aux_is, aux_momentum, flows);
