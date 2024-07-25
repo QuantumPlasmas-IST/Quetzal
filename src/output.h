@@ -15,8 +15,8 @@ typedef struct hdf5_complex{
 
 void open_file(input_t* input);
 
-void write_solution(input_t* input, REAL** results, int timestep);
-void write_fields(input_t* input, COMPLEX** fields, int timestep);
+void write_solution(input_t* input, REAL** results, REAL** aux, int* indices, int timestep);
+void write_fields (input_t* input, COMPLEX** fields, COMPLEX** aux, int* indices, int timestep);
 void write_sources(input_t* input, COMPLEX** sources, COMPLEX** aux, int* indices, int timestep);
 
 #endif

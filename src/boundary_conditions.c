@@ -139,6 +139,81 @@ void inverse_boundary_shift(input_t* input, COMPLEX* start, COMPLEX* final, int*
 
 }
 
+void species_boundary_shift(input_t* input, REAL* start, REAL* final, int* aux){
+
+    int count = 0;
+    int inside = 0;
+
+    for(int i = 0; i < input->pos_total * input->mom_total; ++i){
+
+        inside = 1;
+
+        axis_index(input->pos_dims+input->mom_dims, input->pos_points, aux, i);
+
+        for (int dim = 0; dim < input->pos_dims+input->mom_dims; ++dim){
+            if(aux[dim] < input->padding || aux[dim] >= input->pos_points[dim] - input->padding){
+                inside = 0;
+            }
+        }
+
+        if (inside){
+            final[count] = start[i];
+            count++;
+        }
+    }
+
+    for(int i = 0; i < input->pos_dims+input->mom_dims; ++i){
+        input->pos_points[i] -= 2 * input->padding;
+    }
+
+}
+
+void species_inverse_boundary_shift(input_t* input, REAL* start, REAL* final, int* aux){
+
+    for(int i = 0; i < input->pos_dims+input->mom_dims; ++i){
+        input->pos_points[i] += 2 * input->padding;
+    }
+
+    int count = 0;
+    int inside = 0;
+
+    for(int i = 0; i < input->pos_total * input->mom_total; ++i){
+
+        inside = 1;
+
+        axis_index(input->pos_dims+input->mom_dims, input->pos_points, aux, i);
+
+        for (int dim = 0; dim < input->pos_dims+input->mom_dims; ++dim){
+            for(int p = 0; p < input->padding; ++p){
+                if(aux[dim] == p){
+                    inside = 0;
+                    aux[dim] = input->pos_points[dim]- 2 * input-> padding + p;
+                }
+                if(aux[dim] == input->pos_points[dim] - input->padding + p){
+                    inside = 0;
+                    aux[dim] = input->padding + p;
+                }
+            }
+            aux[dim] -= input->padding;
+        }
+
+        if (inside){
+            final[i] = start[count];
+            count++;
+        }
+
+        else{
+            for(int j = 0; j < input->pos_dims+input->mom_dims; ++j){
+                input->pos_points[j] -= 2 * input->padding;
+            }
+            final[i] = start[list_index(input->pos_dims+input->mom_dims, input->pos_points, aux)];
+            for(int j = 0; j < input->pos_dims+input->mom_dims; ++j){
+                input->pos_points[j] += 2 * input->padding;
+            }
+        }
+    }
+}
+
 void ghost_cell_transfer(input_t* input, REAL* species, REAL*** left_buffer, REAL*** right_buffer){
 
     MPI_Barrier(MPI_COMM_WORLD);

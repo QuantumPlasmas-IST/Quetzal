@@ -602,7 +602,8 @@ input_t* read_input(const char* name, int rank, int size){
         if(!strcmp(txt_part,"FIELD_PARAMS")) field_parameters[count] = atof(num_part);
         if(!strcmp(txt_part,"FILENAME")) strcpy(input->filename, num_part);
         if(!strcmp(txt_part,"OPER")) strcpy(input->operator, num_part);
-        if(!strcmp(txt_part,"DIAG_FREQ")) input->diag_freq = atoi(num_part);
+        if(!strcmp(txt_part,"POS_DIAG_FREQ")) input->pos_diag_freq = atoi(num_part);
+        if(!strcmp(txt_part,"MOM_DIAG_FREQ")) input->mom_diag_freq = atoi(num_part);
         if(!strcmp(txt_part,"PADDING")) input->padding = atoi(num_part);
         if(!strcmp(txt_part,"CHARGES")) input->charges[0][count] = atof(num_part);
 	}
@@ -620,16 +621,16 @@ input_t* read_input(const char* name, int rank, int size){
 
 void print_input(input_t* input){
     printf("Output filename = %s\n", input->filename);
-    printf("Diagnostic Frequency = %d\n", input->diag_freq);
+    printf("Diagnostic Frequency = %d\n", input->pos_diag_freq);
     printf("Number of timesteps = %d\n", input->n_timesteps);
     printf("Length of timestep = %f\n", input->deltaT);
     printf("Number of configuration space dimentions = %d\n", input->pos_dims);
     printf("Number of momentum space dimentions = %d\n", input->mom_dims);
     for(int j = 0; j < input->pos_dims; ++j){
-        printf("Number of configuration space points on axis %d = %d\n", j, input->pos_points[j]-2);
+        printf("Number of configuration space points on axis %d = %d\n", j, input->pos_points[j]);
     }
     for(int j = 0; j < input->mom_dims; ++j){
-        printf("Number of momentum space points on axis %d = %d\n", j, input->mom_points[j]-2);
+        printf("Number of momentum space points on axis %d = %d\n", j, input->mom_points[j]);
     }
     for(int j = 0; j < input->pos_dims; ++j){
         printf("Initial distribution of position axis %d: %s\n", j, input->pos_init_names[j]);

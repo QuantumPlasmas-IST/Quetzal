@@ -21,7 +21,8 @@ typedef void(*bound_t)(int, int*, int, int, REAL*); //type: pointer to boundary 
 typedef struct input{
    
     char* filename;
-    int diag_freq;
+    int pos_diag_freq;
+    int mom_diag_freq;
 
     int pos_dims;
     int mom_dims;

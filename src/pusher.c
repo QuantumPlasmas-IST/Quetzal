@@ -81,15 +81,20 @@ REAL** solve(input_t* input){
 
     if(!strcmp(input->pusher,"runge kutta")){
         for(int i = 0; i < input->n_timesteps; ++i){
-            if(!(i%input->diag_freq)){
-                //write_fields(input, fields, i);
-                //write_solution(input, species, i);
+            
+            if(!(i%input->pos_diag_freq)){
+                write_fields(input, fields, sources, is, i);
                 write_sources(input, sources_aux, fields_aux, is, i);
                 if(!input->rank){
                     printf("Timestep %d\r",i); //Switch back to \r
                     fflush(stdout);
                 }
             }
+
+            if(!(i%input->pos_diag_freq)){
+                write_solution(input, species, species_aux1, is, i);
+            }
+
             rungeKutta2(input, species, species_aux1, species_aux2, sources, sources_aux, fields, flows, is, aux_momentum, left_ghost_buffer, right_ghost_buffer);
             apply_bound_cond(input, species, left_ghost_buffer, right_ghost_buffer);
         }

@@ -12,8 +12,8 @@ colors_from_img = img[::-1, 0, :]
 my_cmap = LinearSegmentedColormap.from_list('my_cmap', colors_from_img, N=878)
 
 #############################
-name = 'anomalous4'
-iter = 2500
+name = 'parallel_test2'
+iter = 2000
 supress = -1
 mode = 's' # s for sum; c for cut
 plane = 10
@@ -34,10 +34,10 @@ def func2(x):
 # Reads Test_Data.h5 file in ../data/ directory
 file=h5py.File('./output/'+name+'.h5','r')
 
-electrons = file['/Species'+str(iter)][0]
-holes = file['/Species'+str(iter)][1]
-potential = file['/Fields'+str(iter)][0]['real']
-pot_im = file['/Fields'+str(iter)][0]['imaginary']
+#electrons = file['/Species'+str(iter)][0]
+#holes = file['/Species'+str(iter)][1]
+#potential = file['/Fields'+str(iter)][0]['real']
+#pot_im = file['/Fields'+str(iter)][0]['imaginary']
 charge = file['/Sources'+str(iter)][0]['real']
 charge_im = file['/Sources'+str(iter)][0]['imaginary']
 
@@ -59,16 +59,21 @@ dl = tuple(np.concatenate((dx,dp)))
 maxs = tuple(np.concatenate((pos_max,mom_max)))
 mins = tuple(np.concatenate((pos_min,mom_min)))
 
-result = holes - electrons
-species_l = np.reshape(result, shape)
+#result = holes - electrons
+#species_l = np.reshape(result, shape)
 if mode == 's':
-    species = np.sum(species_l, axis=supress) * dl[supress]
+    hello=1
+    #species = np.sum(species_l, axis=supress) * dl[supress]
 if mode == 'c':
     species = species_l[:,int(plane/dl[supress]),:]
 
 fig, axs = plt.subplots(layout='constrained')
+
+print(np.shape(charge))
+
 if(supress == -1):
-    sc = plt.imshow(species.T, extent = (mins[0]-2*dl[0], maxs[0]+dl[0], mins[1]-2*dl[1],maxs[1]+dl[1]), aspect='auto', origin = 'lower', cmap=my_cmap ,vmin=-np.amax(np.abs(species))*0.8,vmax=np.amax(np.abs(species))*0.8)
+    #sc = plt.imshow(species.T, extent = (mins[0]-2*dl[0], maxs[0]+dl[0], mins[1]-2*dl[1],maxs[1]+dl[1]), aspect='auto', origin = 'lower', cmap=my_cmap ,vmin=-np.amax(np.abs(species))*0.8,vmax=np.amax(np.abs(species))*0.8)
+    sc = plt.imshow(charge.T, extent = (mins[0], maxs[0], mins[1],maxs[1]), aspect='auto', origin = 'lower', cmap=my_cmap ,vmin=-np.amax(np.abs(charge))*0.8,vmax=np.amax(np.abs(charge))*0.8)
     #plt.scatter(np.linspace(pos_min[0],pos_max[0],pos_num[0]), scale*potential, c='r', s=0.2)
     secay = axs.secondary_yaxis('right', functions=(func1, func2))
 if(supress == 0):

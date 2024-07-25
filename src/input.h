@@ -12,6 +12,7 @@
 #include "boundary_conditions.h"
 #include "dispersion.h"
 #include "force.h"
+#include "output.h"
 
 input_t* read_input(const char* name, int rank, int size);
 

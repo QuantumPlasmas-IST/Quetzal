@@ -13,6 +13,8 @@ void periodic_bound(int total_dims, int* Ns, int dim, int padding, REAL* species
 
 void boundary_shift(input_t* input, COMPLEX* start, COMPLEX* final, int* aux);
 void inverse_boundary_shift(input_t* input, COMPLEX* start, COMPLEX* final, int* aux);
+void species_boundary_shift(input_t* input, REAL* start, REAL* final, int* aux);
+void species_inverse_boundary_shift(input_t* input, REAL* start, REAL* final, int* aux);
 
 void ghost_cell_transfer(input_t* input, REAL* species, REAL*** left_buffer, REAL*** right_buffer);
 
