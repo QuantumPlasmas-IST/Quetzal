@@ -79,9 +79,14 @@ void open_file(input_t* input){
     status = H5Awrite(attribute_id, H5T_NATIVE_REAL, input->mom_min);
     status = H5Aclose(attribute_id);
 
+    REAL* pmax = malloc(input->pos_dims * sizeof(REAL));
+    for(int i = 0; i < input->pos_dims; ++i){
+        pmax[i] = (input->pos_max[i]-input->pos_min[i])*input->procs[i]+input->pos_min[i];
+    }
     attribute_id = H5Acreate (file_id, "Position Max.", H5T_NATIVE_REAL, pos_dims_dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
-    status = H5Awrite(attribute_id, H5T_NATIVE_REAL, input->pos_max);
+    if(!input->rank) status = H5Awrite(attribute_id, H5T_NATIVE_REAL, pmax);
     status = H5Aclose(attribute_id);
+    free(pmax);
 
     attribute_id = H5Acreate (file_id, "Momentum Max.", H5T_NATIVE_REAL, mom_dims_dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
     status = H5Awrite(attribute_id, H5T_NATIVE_REAL, input->mom_max);
@@ -95,9 +100,14 @@ void open_file(input_t* input){
     status = H5Awrite(attribute_id, H5T_NATIVE_REAL, input->mom_delta);
     status = H5Aclose(attribute_id);
 
+    int* pps = malloc(input->pos_dims * sizeof(int));
+    for(int i = 0; i < input->pos_dims; ++i){
+        pps[i] = (input->pos_points[i] - 2*input->padding) * input->procs[i];
+    }
     attribute_id = H5Acreate (file_id, "Number of Position Points", H5T_NATIVE_INT, pos_dims_dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
-    status = H5Awrite(attribute_id, H5T_NATIVE_INT, input->pos_points);
+    status = H5Awrite(attribute_id, H5T_NATIVE_INT, pps);
     status = H5Aclose(attribute_id);
+    free(pps);
 
     attribute_id = H5Acreate (file_id, "Number of Momentum Points", H5T_NATIVE_INT, mom_dims_dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
     status = H5Awrite(attribute_id, H5T_NATIVE_INT, input->mom_points);
