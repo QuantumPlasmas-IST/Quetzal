@@ -6,43 +6,15 @@ SRCDIR := src
 
 CCFLAGS := -pedantic -g
 
-CC := gcc
+CC := h5pcc
 
 # Libraries
 
 # Laptop-PC
-#MPI_ROOT = /home/diogo/MPI_install
-#MPI_CCOMPILEFLAGS = -I$(MPI_ROOT)/include -I$(MPI_ROOT)/openmpi
-#MPI_CLINKFLAGS    = -L$(MPI_ROOT)/lib -lmpi
-
-#H5_ROOT = /home/diogo/hdf5_install
-#H5_CCOMPILEFLAGS = -I$(H5_ROOT)/include
-#H5_CLINKFLAGS    = -Wl,-rpath -Wl,$(H5_ROOT)/lib -L$(H5_ROOT)/lib -lhdf5 -lm
-#HDF5_ENABLE_PARALLEL = ON
-
 #MISC_CLINKFLAGS = -L/usr/local/lib -lgsl -lgslcblas -lm
 #MISC_CCOMPILEFLAGS = -I/usr/local/include
 
-# Accelerates
-#MPI_CCOMPILEFLAGS = -I$(MPI_INCLUDE)
-#MPI_CLINKFLAGS    = -Wl,-rpath -Wl,$(MPI_LIB) -L$(MPI_LIB) \
-                    -lmpifort -lmpi -Wl,--enable-new-dtags
-
-#H5_ROOT = /data/dsimoes/hdf5_install
-#H5_CCOMPILEFLAGS = -I$(H5_ROOT)/include 
-#H5_CLINKFLAGS    = -Wl,-rpath -Wl,$(H5_ROOT)/lib -L$(H5_ROOT)/lib -lhdf5 -lm
-#HDF5_ENABLE_PARALLEL = ON
-
 # Desktop-Mac
-MPI_ROOT = /home/dsimoes/OpenMPI-install
-MPI_CCOMPILEFLAGS = -I$(MPI_ROOT)/include
-MPI_CLINKFLAGS    = -L$(MPI_ROOT)/lib -Wl,-rpath -Wl,$(MPI_ROOT)/lib -Wl,--enable-new-dtags -lmpi
-
-H5_ROOT = /usr
-H5_CCOMPILEFLAGS = -I$(H5_ROOT)/include
-H5_CLINKFLAGS    = -Wl,-rpath -Wl,$(H5_ROOT)/lib64 -L$(H5_ROOT)/lib64 -lhdf5_hl -lhdf5 -lm
-HDF5_ENABLE_PARALLEL = ON
-
 MISC_CLINKFLAGS = -L/usr/lib64 -lgsl -lgslcblas -lm
 MISC_CCOMPILEFLAGS = -I/usr/include
 
@@ -61,11 +33,11 @@ $(LIBDIR)/libFC.a: $(OBJ)
     
 %.exe: $(BINDIR)/%.o $(LIBDIR)/libFC.a
 	@echo LINKING!...
-	$(CC) $(CCFLAGS) -I $(SRCDIR) $(MISC_CCOMPILEFLAGS) $(MPI_CCOMPILEFLAGS) $(H5_CCOMPILEFLAGS) $< -o $(BINDIR)/$@ -L lib -lFC $(MISC_CLINKFLAGS) $(MPI_CLINKFLAGS) $(H5_CLINKFLAGS)
+	$(CC) $(CCFLAGS) -I $(SRCDIR) $(MISC_CCOMPILEFLAGS) $< -o $(BINDIR)/$@ -L lib -lFC $(MISC_CLINKFLAGS)
 
 $(BINDIR)/%.o: %.c | $(INC)
-	@echo COMPILING!... $< $(MPI_ROOT) $(H5_ROOT)
-	$(CC) $(CCFLAGS) -I $(SRCDIR) $(MISC_CCOMPILEFLAGS) $(MPI_CCOMPILEFLAGS) $(H5_CCOMPILEFLAGS) -c $< -o $@ $(MISC_CLINKFLAGS) $(MPI_CLINKFLAGS) $(H5_CLINKFLAGS)
+	@echo COMPILING!... $<
+	$(CC) $(CCFLAGS) -I $(SRCDIR) $(MISC_CCOMPILEFLAGS) -c $< -o $@ $(MISC_CLINKFLAGS)
 
 ######### clean
 
