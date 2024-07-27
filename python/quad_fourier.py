@@ -7,9 +7,9 @@ import scipy.optimize as opt
 import mpmath as mpm
 
 #############################
-name = 'dispersion_2DMaxwellQuadratic0'
-T = 0.01
-u = 0.005
+name = 'dispersion_2DFermiQuadratic0'
+T = 0.25
+u = 0.00
 ge = np.pi
 
 wp2 = 1
@@ -83,8 +83,8 @@ beta = (T**2) * ((np.pi**2)/6 + (u/T)**2 / 2)
 qs = np.linspace(0,50,1000)
 
 sc = plt.imshow(np.log10(Srho+1e-5), extent = (-kmax/2-dk/2,kmax/2-dk/2,-wmax/2-dw/2,wmax/2-dw/2), aspect='auto', origin = 'lower')
-plt.plot(qs, np.sqrt(wp2 * qs + 3 * T * qs**2), c = 'r')                    # 2D Maxwell
-#plt.plot(qs, np.sqrt(ge * alpha * qs + 3*beta/alpha * qs**2), c = 'r')     # 2D Fermi
+#plt.plot(qs, np.sqrt(wp2 * qs + 3 * T * qs**2), c = 'r')                    # 2D Maxwell
+plt.plot(qs, np.sqrt(ge * alpha * qs + 3*beta/alpha * qs**2), c = 'r')     # 2D Fermi
 plt.plot(qs, qs, c = 'r')     # Damping threshold
 plt.xlim((-10,10))
 plt.ylim((0,6))
@@ -97,8 +97,8 @@ plt.savefig("./img/"+name+"_chargeFFT.png", dpi=200)
 plt.close()
 
 sc = plt.imshow(np.log10(Sphi+1e-5), extent = (-kmax/2-dk/2,kmax/2-dk/2,-wmax/2-dw/2,wmax/2-dw/2), aspect='auto', origin = 'lower')
-plt.plot(qs, np.sqrt(wp2 * qs + 3 * T * qs**2), c = 'r')                    # 2D Maxwell
-#plt.plot(qs, np.sqrt(ge * alpha * qs + 3*beta/alpha * qs**2), c = 'r')     # 2D Fermi
+#plt.plot(qs, np.sqrt(wp2 * qs + 3 * T * qs**2), c = 'r')                    # 2D Maxwell
+plt.plot(qs, np.sqrt(ge * alpha * qs + 3*beta/alpha * qs**2), c = 'r')     # 2D Fermi
 plt.plot(qs, qs, c = 'r')     # Damping threshold
 plt.xlim((-10,10))
 plt.ylim((0,6))

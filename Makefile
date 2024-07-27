@@ -10,19 +10,18 @@ CC := gcc
 
 # Libraries
 
-# PC
-MPI_ROOT = /home/diogo/MPI_install
-MPI_CCOMPILEFLAGS = -I$(MPI_ROOT)/include -I$(MPI_ROOT)/openmpi
-MPI_CLINKFLAGS    = -L$(MPI_ROOT)/lib -lmpi
+# Laptop-PC
+#MPI_ROOT = /home/diogo/MPI_install
+#MPI_CCOMPILEFLAGS = -I$(MPI_ROOT)/include -I$(MPI_ROOT)/openmpi
+#MPI_CLINKFLAGS    = -L$(MPI_ROOT)/lib -lmpi
 
-H5_ROOT = /home/diogo/hdf5_install
-H5_CCOMPILEFLAGS = -I$(H5_ROOT)/include
-H5_CLINKFLAGS    = -Wl,-rpath -Wl,$(H5_ROOT)/lib -L$(H5_ROOT)/lib -lhdf5 -lm
-HDF5_ENABLE_PARALLEL = ON
+#H5_ROOT = /home/diogo/hdf5_install
+#H5_CCOMPILEFLAGS = -I$(H5_ROOT)/include
+#H5_CLINKFLAGS    = -Wl,-rpath -Wl,$(H5_ROOT)/lib -L$(H5_ROOT)/lib -lhdf5 -lm
+#HDF5_ENABLE_PARALLEL = ON
 
-MISC_CLINKFLAGS = -L/usr/local/lib -lgsl -lgslcblas -lm
-MISC_CCOMPILEFLAGS = -I/usr/local/include
-
+#MISC_CLINKFLAGS = -L/usr/local/lib -lgsl -lgslcblas -lm
+#MISC_CCOMPILEFLAGS = -I/usr/local/include
 
 # Accelerates
 #MPI_CCOMPILEFLAGS = -I$(MPI_INCLUDE)
@@ -33,6 +32,19 @@ MISC_CCOMPILEFLAGS = -I/usr/local/include
 #H5_CCOMPILEFLAGS = -I$(H5_ROOT)/include 
 #H5_CLINKFLAGS    = -Wl,-rpath -Wl,$(H5_ROOT)/lib -L$(H5_ROOT)/lib -lhdf5 -lm
 #HDF5_ENABLE_PARALLEL = ON
+
+# Desktop-Mac
+MPI_ROOT = /home/dsimoes/OpenMPI-install
+MPI_CCOMPILEFLAGS = -I$(MPI_ROOT)/include
+MPI_CLINKFLAGS    = -L$(MPI_ROOT)/lib -Wl,-rpath -Wl,$(MPI_ROOT)/lib -Wl,--enable-new-dtags -lmpi
+
+H5_ROOT = /usr
+H5_CCOMPILEFLAGS = -I$(H5_ROOT)/include
+H5_CLINKFLAGS    = -Wl,-rpath -Wl,$(H5_ROOT)/lib64 -L$(H5_ROOT)/lib64 -lhdf5_hl -lhdf5 -lm
+HDF5_ENABLE_PARALLEL = ON
+
+MISC_CLINKFLAGS = -L/usr/lib64 -lgsl -lgslcblas -lm
+MISC_CCOMPILEFLAGS = -I/usr/include
 
 VPATH = main:src
 
