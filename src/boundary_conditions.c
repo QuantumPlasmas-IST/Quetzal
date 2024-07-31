@@ -257,8 +257,8 @@ void ghost_cell_transfer(input_t* input, REAL* species, REAL*** left_buffer, REA
             //MPI_Isendrecv_replace(left_buffer[i][p], above*below, MPI_DOUBLE, left_proc, input->rank, right_proc, right_proc, MPI_COMM_WORLD, &Req[2*(i*input->padding+p)]);
             //MPI_Isendrecv_replace(right_buffer[i][p], above*below, MPI_DOUBLE, right_proc, input->rank, left_proc, left_proc, MPI_COMM_WORLD, &Req[2*(i*input->padding+p)+1]);
 
-            MPI_Sendrecv_replace(left_buffer[i][p], above*below, MPI_DOUBLE, left_proc, input->rank, right_proc, right_proc, MPI_COMM_WORLD, &Stat[2*(i*input->padding+p)]);
-            MPI_Sendrecv_replace(right_buffer[i][p], above*below, MPI_DOUBLE, right_proc, input->rank, left_proc, left_proc, MPI_COMM_WORLD, &Stat[2*(i*input->padding+p)+1]);
+            MPI_Sendrecv_replace(left_buffer[i][p], above*below, QTZ_MPI_REAL, left_proc, input->rank, right_proc, right_proc, MPI_COMM_WORLD, &Stat[2*(i*input->padding+p)]);
+            MPI_Sendrecv_replace(right_buffer[i][p], above*below, QTZ_MPI_REAL, right_proc, input->rank, left_proc, left_proc, MPI_COMM_WORLD, &Stat[2*(i*input->padding+p)+1]);
 
         }
 
@@ -270,6 +270,71 @@ void ghost_cell_transfer(input_t* input, REAL* species, REAL*** left_buffer, REA
 
                     species[(i * Nj + p) * below + k] = left_buffer[i][p][j*below + k];
                     species[(Nj * (i + 1) - input->padding + p) * below + k] = right_buffer[i][p][j*below + k];
+                }
+            }
+        }
+
+    }
+
+    MPI_Barrier(MPI_COMM_WORLD);
+}
+
+void field_cell_transfer(input_t* input, COMPLEX* field, COMPLEX*** left_buffer, COMPLEX*** right_buffer){
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    
+    MPI_Request Req[2*input->pos_dims*input->padding];
+    MPI_Status  Stat[2*input->pos_dims*input->padding];
+
+    for(int i = 0; i < input->pos_dims; ++i){
+
+        int above = 1;
+        int below = 1;
+        int Nj = input->pos_points[i];
+        for(int j = 0; j < i; ++j){
+            above *= input->pos_points[j];
+        }
+        for(int j = i+1; j < input->pos_dims; ++j){
+            below *= input->pos_points[j];
+        }
+
+        for (int p = 0; p < input->padding; ++p){
+            for(int j = 0; j < above; ++j){
+                for(int k = 0; k < below; ++k){
+
+                    left_buffer[i][p][j*below + k] = field[(Nj * (i + 1) - 2* input->padding + p) * below + k];
+                    right_buffer[i][p][j*below + k] = field[(i * Nj + input->padding + p) * below + k];
+                }
+            }
+        }
+
+        int left_proc = input->rank - input->parallel_factor[i];
+        int right_proc = input->rank + input->parallel_factor[i];
+        if(input->parallel_pos[i]%input->procs[i] == 0){
+            left_proc = input->rank + (input->procs[i]-1) * input->parallel_factor[i];
+        }
+        if(input->parallel_pos[i]%input->procs[i] == input->procs[i]-1){
+            right_proc = input->rank - (input->procs[i]-1) * input->parallel_factor[i];
+        }
+
+        for (int p = 0; p < input->padding; ++p){
+            
+            //MPI_Isendrecv_replace(left_buffer[i][p], above*below, MPI_DOUBLE, left_proc, input->rank, right_proc, right_proc, MPI_COMM_WORLD, &Req[2*(i*input->padding+p)]);
+            //MPI_Isendrecv_replace(right_buffer[i][p], above*below, MPI_DOUBLE, right_proc, input->rank, left_proc, left_proc, MPI_COMM_WORLD, &Req[2*(i*input->padding+p)+1]);
+
+            MPI_Sendrecv_replace(left_buffer[i][p], above*below, QTZ_MPI_COMPLEX, left_proc, input->rank, right_proc, right_proc, MPI_COMM_WORLD, &Stat[2*(i*input->padding+p)]);
+            MPI_Sendrecv_replace(right_buffer[i][p], above*below, QTZ_MPI_COMPLEX, right_proc, input->rank, left_proc, left_proc, MPI_COMM_WORLD, &Stat[2*(i*input->padding+p)+1]);
+
+        }
+
+        //MPI_Waitall(2*input->padding, &Req[2*i*input->padding], &Stat[2*i*input->padding]);
+
+        for (int p = 0; p < input->padding; ++p){
+            for(int j = 0; j < above; ++j){
+                for(int k = 0; k < below; ++k){
+
+                    field[(i * Nj + p) * below + k] = left_buffer[i][p][j*below + k];
+                    field[(Nj * (i + 1) - input->padding + p) * below + k] = right_buffer[i][p][j*below + k];
                 }
             }
         }

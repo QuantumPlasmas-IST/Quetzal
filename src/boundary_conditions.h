@@ -17,5 +17,6 @@ void species_boundary_shift(input_t* input, REAL* start, REAL* final, int* aux);
 void species_inverse_boundary_shift(input_t* input, REAL* start, REAL* final, int* aux);
 
 void ghost_cell_transfer(input_t* input, REAL* species, REAL*** left_buffer, REAL*** right_buffer);
+void field_cell_transfer(input_t* input, COMPLEX* field, COMPLEX*** left_buffer, COMPLEX*** right_buffer);
 
 #endif

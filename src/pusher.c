@@ -19,16 +19,24 @@ REAL** solve(input_t* input){
     REAL*** left_ghost_buffer = malloc(input->pos_dims * sizeof(REAL**));
     REAL*** right_ghost_buffer = malloc(input->pos_dims * sizeof(REAL**));
 
+    COMPLEX*** left_field_buffer = malloc(input->pos_dims * sizeof(COMPLEX**));
+    COMPLEX*** right_field_buffer = malloc(input->pos_dims * sizeof(COMPLEX**));
+
     for(int i = 0; i < input->pos_dims; ++i){
 
         int buffer_size = input->pos_total*input->mom_total / input->pos_points[i];
+        int buffer_size2 = input->pos_total / input->pos_points[i];
 
         left_ghost_buffer[i]   =  malloc(input->padding * sizeof(REAL*));
         right_ghost_buffer[i]  =  malloc(input->padding * sizeof(REAL*));
+        left_field_buffer[i]   =  malloc(input->padding * sizeof(COMPLEX*));
+        right_field_buffer[i]  =  malloc(input->padding * sizeof(COMPLEX*));
 
         for(int p = 0; p < input->padding; ++p){
             left_ghost_buffer[i][p]   =  malloc(buffer_size * sizeof(REAL));
             right_ghost_buffer[i][p]  =  malloc(buffer_size * sizeof(REAL));
+            left_field_buffer[i][p]   =  malloc(buffer_size * sizeof(COMPLEX));
+            right_field_buffer[i][p]  =  malloc(buffer_size * sizeof(COMPLEX));
         }
     }
 
@@ -62,7 +70,42 @@ REAL** solve(input_t* input){
     REAL* aux_momentum = malloc(input->mom_dims * sizeof(REAL));
 
     if(!input->rank) printf("Memory Allocation Complete\n");
-    // Memory successfully allocated *thumbs up emoji* //
+
+    // Setting up MPI-FFT //
+
+    int* fft_ns = malloc(sizeof(int) * input->pos_dims);
+    int* fft_hi = malloc(sizeof(int) * input->pos_dims);
+    int* fft_lo = malloc(sizeof(int) * input->pos_dims);
+    
+    int fftsize,sendsize,recvsize;
+
+    for (int i = 0; i < input->pos_dims; ++i){
+        fft_lo[i] = input->parallel_pos[i] * (input->pos_points[i]-2*input->padding);
+        fft_hi[i] = (input->parallel_pos[i]+1) * (input->pos_points[i]-2*input->padding) - 1;
+        fft_ns[i] = input->procs[i] * (input->pos_points[i]-2*input->padding);
+    }
+    
+    if(input->pos_dims == 2){
+        fft2d_create(MPI_COMM_WORLD, 2, &input->fft);
+        fft2d_setup(input->fft, fft_ns[1], fft_ns[0], fft_lo[1], fft_hi[1], fft_lo[0], fft_hi[0], fft_lo[1], fft_hi[1], fft_lo[0], fft_hi[0], 0, &fftsize, &sendsize, &recvsize);
+        if(fftsize > input->pos_total){
+            printf("ERROR, INSUFICIENT MEMORY FOR PERFORMING FFT (%d vs %d)\n\n", fftsize, input->pos_total);
+            return NULL;
+        }
+    }
+
+    if(input->pos_dims == 3){
+        fft3d_create(MPI_COMM_WORLD, 2, &input->fft);
+        fft3d_setup(input->fft, fft_ns[2], fft_ns[1], fft_ns[0], fft_lo[2], fft_hi[2], fft_lo[1], fft_hi[1], fft_lo[0], fft_hi[0], fft_lo[2], fft_hi[2], fft_lo[1], fft_hi[1], fft_lo[0], fft_hi[0], 0, &fftsize, &sendsize, &recvsize);
+        if(fftsize > input->pos_total){
+            printf("ERROR, INSUFICIENT MEMORY FOR PERFORMING FFT (%d vs %d)\n\n", fftsize, input->pos_total);
+            return NULL;
+        }
+    }
+
+    free(fft_ns);
+    free(fft_hi);
+    free(fft_lo);
 
     // Applying initial conditions //
 
@@ -81,21 +124,21 @@ REAL** solve(input_t* input){
 
     if(!strcmp(input->pusher,"runge kutta")){
         for(int i = 0; i < input->n_timesteps; ++i){
-            
+
             if(!(i%input->pos_diag_freq)){
                 write_fields(input, fields, sources, is, i);
                 write_sources(input, sources_aux, fields_aux, is, i);
                 if(!input->rank){
-                    printf("Timestep %d\r",i); //Switch back to \r
+                    printf("Timestep %d\n",i);
                     fflush(stdout);
                 }
             }
 
-            if(!(i%input->pos_diag_freq)){
+            if(!(i%input->mom_diag_freq)){
                 write_solution(input, species, species_aux1, is, i);
             }
 
-            rungeKutta2(input, species, species_aux1, species_aux2, sources, sources_aux, fields, flows, is, aux_momentum, left_ghost_buffer, right_ghost_buffer);
+            rungeKutta2(input, species, species_aux1, species_aux2, sources, sources_aux, fields, flows, is, aux_momentum, left_ghost_buffer, right_ghost_buffer, left_field_buffer, right_field_buffer);
             apply_bound_cond(input, species, left_ghost_buffer, right_ghost_buffer);
         }
     }
@@ -174,7 +217,7 @@ void integrate_source(input_t* input, REAL** species, COMPLEX** sources, COMPLEX
 
 }
 
-void convolute_field(input_t* input, COMPLEX** sources, COMPLEX** fields){
+void convolute_field(input_t* input, COMPLEX** sources, COMPLEX** fields, COMPLEX*** left_buffer, COMPLEX*** right_buffer){
 
     REAL* wavevector = malloc(input->pos_dims * sizeof(REAL));
     int* indices = malloc(input->pos_dims * sizeof(int));
@@ -191,27 +234,52 @@ void convolute_field(input_t* input, COMPLEX** sources, COMPLEX** fields){
 
             boundary_shift(input, sources[k], fields[k], indices);
 
-            NdFourier(input->pos_dims, input->pos_points, fields[k], sources[k]);
+            switch (input->pos_dims){
+                case 1:
+                    NdFourier(input->pos_dims, input->pos_points, fields[k], sources[k]);
+                    break;
+                case 2:
+                    fft2d_compute(input->fft, (double*) fields[k], (double*) sources[k], 1);
+                    break;
+                case 3:
+                    fft3d_compute(input->fft, (double*) fields[k], (double*) sources[k], 1);
+                    break;
+            }
 
             for(int i = 0; i < input->pos_total; ++i){
 
                 axis_index(input->pos_dims, input->pos_points, indices, i);
 
                 for(int j = 0; j < input->pos_dims; ++j){
-                    if (indices[j]<input->pos_points[j]/2){
-                        wavevector[j] = 2 * M_PI * indices[j] / (input->pos_max[j]-input->pos_min[j]);
+
+                    indices[j] += input->parallel_pos[j] * input->pos_points[j];
+
+                    if (indices[j] < (input->pos_points[j]*input->procs[j])/2){
+                        wavevector[j] = input->dk[j] * indices[j];
                     }
                     else{
-                        wavevector[j] = 2 * M_PI * (-input->pos_points[j] + indices[j]) / (input->pos_max[j]-input->pos_min[j]);
+                        wavevector[j] = input->dk[j] * (-input->pos_points[j]*input->procs[j] + indices[j]);
                     }
                 }
-                
+
                 fields[k][i] = input->kernels[k](input->pos_dims, sources[k][i], wavevector);
-            } 
-            
-            NdInverseFourier(input->pos_dims, input->pos_points, fields[k], sources[k]);
+            }
+             
+            switch (input->pos_dims){
+                case 1:
+                    NdInverseFourier(input->pos_dims, input->pos_points, fields[k], sources[k]);
+                    break;
+                case 2:
+                    fft2d_compute(input->fft, (double*) fields[k], (double*) sources[k], -1);
+                    break;
+                case 3:
+                    fft3d_compute(input->fft, (double*) fields[k], (double*) sources[k], -1);
+                    break;
+            }
 
             inverse_boundary_shift(input, sources[k], fields[k], indices);
+
+            field_cell_transfer(input, fields[k], left_buffer, right_buffer);
 
         }
 
@@ -432,10 +500,10 @@ void finite_volumeNL2(input_t* input, REAL** species, COMPLEX** fields, int* aux
     }
 }
 
-void rungeKutta2(input_t* input, REAL** species, REAL** aux1, REAL** aux2, COMPLEX** sources, COMPLEX** sources_aux, COMPLEX** fields, REAL*** flows, int* aux_is, REAL* aux_momentum, REAL*** left_buffer, REAL*** right_buffer){
+void rungeKutta2(input_t* input, REAL** species, REAL** aux1, REAL** aux2, COMPLEX** sources, COMPLEX** sources_aux, COMPLEX** fields, REAL*** flows, int* aux_is, REAL* aux_momentum, REAL*** left_buffer, REAL*** right_buffer, COMPLEX*** left_field_buffer, COMPLEX*** right_field_buffer){
     
     integrate_source(input, species, sources, sources_aux);
-    convolute_field(input, sources, fields);
+    convolute_field(input, sources, fields, left_field_buffer, right_field_buffer);
     finite_volume2(input, species, fields, aux_is, aux_momentum, flows);
 
     for(int i = 0; i < input->n_species; ++i){
@@ -451,7 +519,7 @@ void rungeKutta2(input_t* input, REAL** species, REAL** aux1, REAL** aux2, COMPL
 
     apply_bound_cond(input, aux1, left_buffer, right_buffer);
     integrate_source(input, aux1, sources, sources_aux);
-    convolute_field(input, sources, fields);
+    convolute_field(input, sources, fields, left_field_buffer, right_field_buffer);
     finite_volume2(input, aux1, fields, aux_is, aux_momentum, flows);
 
     for(int i = 0; i < input->n_species; ++i){

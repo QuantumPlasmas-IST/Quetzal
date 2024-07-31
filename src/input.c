@@ -21,8 +21,10 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
 
     input->pos_delta = malloc(input->pos_dims * sizeof(REAL));
     input->mom_delta = malloc(input->mom_dims * sizeof(REAL));
+    input->dk = malloc(input->pos_dims * sizeof(REAL));
     for(int i = 0; i < input->pos_dims; ++i){
         input->pos_delta[i] = (input->pos_max[i]-input->pos_min[i])/input->pos_points[i];
+        input->dk[i] = 2 * M_PI / (input->pos_max[i]-input->pos_min[i]);
         input->pos_points[i] = input->pos_points[i]/input->procs[i];
         input->pos_min[i] += input->parallel_pos[i] * input->pos_points[i] * input->pos_delta[i];
         input->pos_max[i] = input->pos_min[i] + input->pos_points[i]*input->pos_delta[i];

@@ -1,3 +1,5 @@
 #define REAL double
 #define COMPLEX double complex
 #define H5T_NATIVE_REAL H5T_NATIVE_DOUBLE
+#define QTZ_MPI_REAL MPI_DOUBLE
+#define QTZ_MPI_COMPLEX MPI_C_DOUBLE_COMPLEX

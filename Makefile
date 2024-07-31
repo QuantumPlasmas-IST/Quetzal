@@ -12,12 +12,12 @@ CC := h5pcc
 # Libraries
 
 # PC
-#MISC_CLINKFLAGS = -L/usr/local/lib -lgsl -lgslcblas -lm
-#MISC_CCOMPILEFLAGS = -I/usr/local/include
+MISC_CLINKFLAGS = -L/usr/local/lib -lgsl -lgslcblas -lm -L/home/diogo/fftMPI_source/fftmpi-master/src  -lfft3dmpi -lfft2dmpi
+MISC_CCOMPILEFLAGS = -I/usr/local/include -I/home/diogo/fftMPI_source/fftmpi-master/src
 
 # Mac
-MISC_CLINKFLAGS = -L/usr/lib64 -lgsl -lgslcblas -lm
-MISC_CCOMPILEFLAGS = -I/usr/include
+#MISC_CLINKFLAGS = -L/usr/lib64 -lgsl -lgslcblas -lm
+#MISC_CCOMPILEFLAGS = -I/usr/include
 
 VPATH = main:src
 

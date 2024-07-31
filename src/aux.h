@@ -9,6 +9,11 @@
 #include <string.h>
 #include <complex.h>
 #include "compile.h"
+#include "mpi.h"
+#include "fft3d_wrap.h"
+#include "fft2d_wrap.h"
+#include "remap3d_wrap.h"
+#include "remap2d_wrap.h"
 
 typedef void(*disp_t)(int, int, REAL*); // type: pointer to dispersion relation (band) function
 
@@ -35,6 +40,7 @@ typedef struct input{
     REAL* pos_delta;
     REAL* mom_delta;
     REAL* lambda;
+    REAL* dk;
     
     REAL* pos_min;
     REAL* pos_max;
@@ -83,6 +89,7 @@ typedef struct input{
     int* procs;
     int* parallel_pos;
     int* parallel_factor;
+    void* fft;
 
 } input_t;
 
