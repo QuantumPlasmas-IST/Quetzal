@@ -71,21 +71,27 @@ void open_file(input_t* input){
     status = H5Awrite(attribute_id, H5T_NATIVE_INT, &(input->n_species));
     status = H5Aclose(attribute_id);
 
+    REAL* pmax = malloc(input->pos_dims * sizeof(REAL));
+    for(int i = 0; i < input->pos_dims; ++i){
+        pmax[i] = input->pos_min[i] - input->parallel_pos[i]*(input->pos_points[i]-2*input->padding)*input->pos_delta[i];
+    }
+
     attribute_id = H5Acreate (file_id, "Position Min.", H5T_NATIVE_REAL, pos_dims_dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
-    status = H5Awrite(attribute_id, H5T_NATIVE_REAL, input->pos_min);
+    status = H5Awrite(attribute_id, H5T_NATIVE_REAL, pmax);
     status = H5Aclose(attribute_id);
 
     attribute_id = H5Acreate (file_id, "Momentum Min.", H5T_NATIVE_REAL, mom_dims_dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
     status = H5Awrite(attribute_id, H5T_NATIVE_REAL, input->mom_min);
     status = H5Aclose(attribute_id);
 
-    REAL* pmax = malloc(input->pos_dims * sizeof(REAL));
     for(int i = 0; i < input->pos_dims; ++i){
-        pmax[i] = (input->pos_max[i]-input->pos_min[i])*input->procs[i]+input->pos_min[i];
+        pmax[i] = input->pos_min[i] + input->procs[i] * (input->pos_max[i]-input->pos_min[i]) - input->parallel_pos[i]*(input->pos_points[i]-2*input->padding)*input->pos_delta[i];
     }
+
     attribute_id = H5Acreate (file_id, "Position Max.", H5T_NATIVE_REAL, pos_dims_dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
-    if(!input->rank) status = H5Awrite(attribute_id, H5T_NATIVE_REAL, pmax);
+    status = H5Awrite(attribute_id, H5T_NATIVE_REAL, pmax);
     status = H5Aclose(attribute_id);
+    
     free(pmax);
 
     attribute_id = H5Acreate (file_id, "Momentum Max.", H5T_NATIVE_REAL, mom_dims_dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
