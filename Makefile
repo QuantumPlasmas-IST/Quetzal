@@ -25,16 +25,16 @@ SRC := $(wildcard $(SRCDIR)/*.c)
 OBJ := $(patsubst %.c, $(BINDIR)/%.o, $(notdir $(SRC)))
 INC := $(wildcard $(SRCDIR)/*.h)
 
-lib: $(LIBDIR)/libFC.a
+lib: $(LIBDIR)/libquetzal.a
 
-$(LIBDIR)/libFC.a: $(OBJ) 
+$(LIBDIR)/libquetzal.a: $(OBJ) 
 	@echo make lib...
 	ar ruv $@ $^
 	ranlib $@
     
-%.exe: $(BINDIR)/%.o $(LIBDIR)/libFC.a
+%.exe: $(BINDIR)/%.o $(LIBDIR)/libquetzal.a
 	@echo LINKING!...
-	$(CC) $(CCFLAGS) -I $(SRCDIR) $(MISC_CCOMPILEFLAGS) $< -o $(BINDIR)/$@ -L lib -lFC $(MISC_CLINKFLAGS)
+	$(CC) $(CCFLAGS) -I $(SRCDIR) $(MISC_CCOMPILEFLAGS) $< -o $(BINDIR)/$@ -L lib -lquetzal $(MISC_CLINKFLAGS)
 
 $(BINDIR)/%.o: %.c | $(INC)
 	@echo COMPILING!... $< $(MPI_ROOT) $(H5_ROOT)
