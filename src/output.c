@@ -283,7 +283,7 @@ void write_fields(input_t* input, COMPLEX** fields, COMPLEX** aux, int* indices,
     offset[0] = 0;
     stride[0] = 1;
     count[0] = 1;
-    block[0] = input->n_species;
+    block[0] = input->n_fields;
 
     for(int i = 0; i < input->pos_dims; ++i){
         block[1+i] = input->pos_points[i];
@@ -297,7 +297,7 @@ void write_fields(input_t* input, COMPLEX** fields, COMPLEX** aux, int* indices,
     sprintf(name, "/Fields%d", timestep);
 
     hsize_t dims[1+input->pos_dims];
-    dims[0] = input->n_species;
+    dims[0] = input->n_fields;
     for(int i = 0; i < input->pos_dims; ++i){
         dims[1+i] = input->procs[i] * block[1+i];
     }

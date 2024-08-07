@@ -145,6 +145,9 @@ REAL** solve(input_t* input){
 
     // Free all the memory
 
+    if(input->pos_dims==2) fft2d_destroy(input->fft);
+    if(input->pos_dims==3) fft3d_destroy(input->fft);
+
     free(is);
     free(aux_momentum);
 
@@ -156,16 +159,35 @@ REAL** solve(input_t* input){
     }
     free(flows);
 
+    for (int dim = 0; dim < input->pos_dims; ++dim){
+        for (int p = 0; p < input->padding; ++p){
+            free(left_field_buffer[dim][p]);
+            free(right_field_buffer[dim][p]);
+            free(left_ghost_buffer[dim][p]);
+            free(right_ghost_buffer[dim][p]);
+        }
+        free(left_field_buffer[dim]);
+        free(right_field_buffer[dim]);
+        free(left_ghost_buffer[dim]);
+        free(right_ghost_buffer[dim]);
+    }
+    free(left_field_buffer);
+    free(right_field_buffer);
+    free(left_ghost_buffer);
+    free(right_ghost_buffer);
+
     free(species_aux1[0]);
     free(species_aux2[0]);
     free(sources[0]);
     free(sources_aux[0]);
     free(fields[0]);
+    free(fields_aux[0]);
     free(species_aux1);
     free(species_aux2);
     free(sources);
     free(sources_aux);
     free(fields);
+    free(fields_aux);
 
     return species;
 }

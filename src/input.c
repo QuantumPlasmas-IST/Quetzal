@@ -720,6 +720,10 @@ void free_input(input_t* input){
 
     free(input->grid_factor);
     free(input->space_factor);
+    free(input->dk);
+    free(input->procs);
+    free(input->parallel_factor);
+    free(input->parallel_pos);
 
     free(input);
 }
