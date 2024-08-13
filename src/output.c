@@ -274,7 +274,7 @@ void write_fields(input_t* input, COMPLEX** fields, COMPLEX** aux, int* indices,
 
     // Eliminate ghost cells
     int step = 1;
-    for(int i = 0; i < input->pos_dims+input->mom_dims; ++i){
+    for(int i = 0; i < input->pos_dims; ++i){
         step *= input->pos_points[i] - 2 * input->padding;
     }
 
@@ -373,10 +373,10 @@ void write_sources(input_t* input, COMPLEX** sources, COMPLEX** aux, int* indice
 
     // Eliminate ghost cells
     int step = 1;
-    for(int i = 0; i < input->pos_dims+input->mom_dims; ++i){
+    for(int i = 0; i < input->pos_dims; ++i){
         step *= input->pos_points[i] - 2 * input->padding;
     }
-    
+
     for(int k = 0; k < input->n_species; ++k){
         boundary_shift(input, sources[k], aux[0]+k*step, indices);
         for(int i = 0; i < input->pos_dims; ++i){
