@@ -202,11 +202,24 @@ def damping_rate(func_k, func_u, func_T):
     func_p = func_w/func_k
     return np.pi * func_w / (4*func_k) * float(-mpm.fabs(fermi_dirac_derivative(func_p, func_u, func_T)+fermi_dirac_derivative(func_p, -func_u, func_T)))
 
-exp_damps = np.zeros(50)
+def maxwell_derivative(func_p, func_T):
+    return -2/np.sqrt(2*np.pi*func_T) * func_p/func_T * np.exp(-func_p*func_p/(2*func_T))
 
-ptest=10
+def damping_rate_max(func_k, func_T):
+    func_omegaP = 1
+    func_beta = 3*func_T
+    func_w = np.sqrt(func_omegaP * func_k + func_beta * func_k**2)
+    func_p = func_w/func_k
+    return np.pi * func_w / (4 * func_k) * maxwell_derivative(func_p,func_T)
 
-for it in range(30):
+landau_size=100
+exp_damps = np.zeros(landau_size)
+
+ptest=70
+
+for it in range(20,100):
+
+    print(it)
 
     slic = it+1
     k_slic = dk*slic
@@ -237,20 +250,15 @@ for it in range(30):
     cond_max = np.argmin(signal_filtered[cond_min:n_figs//divs])
     time_min = times[cond_min]
     time_max = times[cond_max]
-
-    """if(slic<0):
-        params, covs = opt.curve_fit(line, times[1:cond_max], signal_filtered[1:cond_max])
-    else:
-        params, covs = opt.curve_fit(line, times[cond_min:cond_max], signal_filtered[cond_min:cond_max])"""
     
-    if(slic<0):
-        params, covs = opt.curve_fit(line, times[1:cond_max], signal_filtered[1:cond_max])
-    else:
-        peaks,_ = scp.signal.find_peaks(signal_raw)
-        peaks2,_= scp.signal.find_peaks(-signal_raw[peaks])
-        #if(slic==ptest):
-        #    print(peaks2)
-        params, covs = opt.curve_fit(line, times[peaks[:peaks2[0]-1]], signal_raw[peaks[:peaks2[0]-1]])
+    peaks,_ = scp.signal.find_peaks(signal_raw)
+    peaks2,_= scp.signal.find_peaks(-signal_raw[peaks])
+    threshold = 100
+    if(slic>=50):
+        threshold=50
+    if(slic>=65):
+        threshold=25
+    params, covs = opt.curve_fit(line, times[peaks[times[peaks]<threshold]], signal_raw[peaks[times[peaks]<threshold]])
     
     exp_damps[it] = params[0]
 
@@ -278,15 +286,17 @@ for it in range(30):
     
 
 
-th_damps = np.zeros(50)
-for i in range(50):
-    th_damps[i] = damping_rate(np.linspace(1,50,50,endpoint=True)[i]*dk,u,T)
+th_damps = np.zeros(landau_size*2)
+p_theo = np.linspace(1,landau_size*2,landau_size*2,endpoint=True)
+for i in range(landau_size*2):
+    #th_damps[i] = damping_rate(np.linspace(1,landau_size,landau_size,endpoint=True)[i]*dk,u,T)
+    th_damps[i] = damping_rate_max(p_theo[i]*dk,T)
 
-plt.plot(np.linspace(1,50,50,endpoint=True)*dk*2, -2*th_damps)
-plt.scatter(np.linspace(1,50,50,endpoint=True)*dk, -exp_damps,c='r',s=100,marker='+',linewidths=1)
+plt.plot(np.linspace(1,landau_size*2,landau_size*2,endpoint=True)*dk, -th_damps)
+plt.scatter(np.linspace(1,landau_size,landau_size,endpoint=True)*dk, -exp_damps,c='r',s=100,marker='+',linewidths=1)
 plt.scatter(np.array([ptest])*dk, -exp_damps[ptest-1])
 #plt.yscale('log')
-plt.xlim((0,3))
+plt.xlim((0,10))
 plt.ylim((-0.02,0.2))
 plt.xlabel(r"$k_x\cdot l_0$")
 plt.ylabel(r"$-\gamma\cdot t_0$")

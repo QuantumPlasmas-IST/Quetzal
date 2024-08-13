@@ -5,7 +5,7 @@ import h5py
 import scipy as scp
 
 #############################
-name = 'anomalous4'
+name = 'anomalous'
 #############################
 
 # Allows the use of LateX notation in labels
@@ -44,9 +44,6 @@ for i in range(n_figs):
     phi = file['/Fields'+str(i*diag_f)][0]['real']
     charge = file['/Sources'+str(i*diag_f)]
     rho = charge[0]['real']-charge[1]['real']
-
-    rho = rho[2:-2]
-    phi = phi[2:-2]
 
     Frho = scp.fft.fftshift(scp.fft.fft(rho))
     Fphi = scp.fft.fftshift(scp.fft.fft(phi))

@@ -170,8 +170,19 @@ void write_solution(input_t* input, REAL** results, REAL** aux, int* indices, in
     MPI_Barrier(MPI_COMM_WORLD);
 
     // Eliminate ghost cells
+    int step = 1;
+    for(int i = 0; i < input->pos_dims+input->mom_dims; ++i){
+        step *= input->pos_points[i] - 2 * input->padding;
+    }
+
     for(int k = 0; k < input->n_species; ++k){
-        species_boundary_shift(input, results[k], aux[k], indices);
+        species_boundary_shift(input, results[k], aux[0]+k*step, indices);
+        for(int i = 0; i < input->pos_dims+input->mom_dims; ++i){
+            input->pos_points[i] += 2 * input->padding;
+        }
+    }
+    for(int i = 0; i < input->pos_dims+input->mom_dims; ++i){
+        input->pos_points[i] -= 2 * input->padding;
     }
 
     // Declare ID and error variables
@@ -243,7 +254,13 @@ void write_solution(input_t* input, REAL** results, REAL** aux, int* indices, in
     status = H5Fclose(file_id);
 
     for(int k = 0; k < input->n_species; ++k){
-        species_inverse_boundary_shift(input, aux[k], results[k], indices);
+        species_inverse_boundary_shift(input, aux[0]+k*step, results[k], indices);
+        for(int i = 0; i < input->pos_dims+input->mom_dims; ++i){
+            input->pos_points[i] -= 2 * input->padding;
+        }
+    }
+    for(int i = 0; i < input->pos_dims+input->mom_dims; ++i){
+        input->pos_points[i] += 2 * input->padding;
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -256,8 +273,19 @@ void write_fields(input_t* input, COMPLEX** fields, COMPLEX** aux, int* indices,
     MPI_Barrier(MPI_COMM_WORLD);
 
     // Eliminate ghost cells
+    int step = 1;
+    for(int i = 0; i < input->pos_dims+input->mom_dims; ++i){
+        step *= input->pos_points[i] - 2 * input->padding;
+    }
+
     for(int k = 0; k < input->n_fields; ++k){
-        boundary_shift(input, fields[k], aux[k], indices);
+        boundary_shift(input, fields[k], aux[0]+k*step, indices);
+        for(int i = 0; i < input->pos_dims; ++i){
+            input->pos_points[i] += 2 * input->padding;
+        }
+    }
+    for(int i = 0; i < input->pos_dims; ++i){
+        input->pos_points[i] -= 2 * input->padding;
     }
 
     // Create complex IO datatype
@@ -324,7 +352,13 @@ void write_fields(input_t* input, COMPLEX** fields, COMPLEX** aux, int* indices,
     status = H5Fclose(file_id);
 
     for(int k = 0; k < input->n_fields; ++k){
-        inverse_boundary_shift(input, aux[k], fields[k], indices);
+        inverse_boundary_shift(input, aux[0]+k*step, fields[k], indices);
+        for(int i = 0; i < input->pos_dims; ++i){
+            input->pos_points[i] -= 2 * input->padding;
+        }
+    }
+    for(int i = 0; i < input->pos_dims; ++i){
+        input->pos_points[i] += 2 * input->padding;
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -338,8 +372,19 @@ void write_sources(input_t* input, COMPLEX** sources, COMPLEX** aux, int* indice
     MPI_Barrier(MPI_COMM_WORLD);
 
     // Eliminate ghost cells
+    int step = 1;
+    for(int i = 0; i < input->pos_dims+input->mom_dims; ++i){
+        step *= input->pos_points[i] - 2 * input->padding;
+    }
+    
     for(int k = 0; k < input->n_species; ++k){
-        boundary_shift(input, sources[k], aux[k], indices);
+        boundary_shift(input, sources[k], aux[0]+k*step, indices);
+        for(int i = 0; i < input->pos_dims; ++i){
+            input->pos_points[i] += 2 * input->padding;
+        }
+    }
+    for(int i = 0; i < input->pos_dims; ++i){
+        input->pos_points[i] -= 2 * input->padding;
     }
 
     // Create complex IO datatype
@@ -406,7 +451,13 @@ void write_sources(input_t* input, COMPLEX** sources, COMPLEX** aux, int* indice
     status = H5Fclose(file_id);
 
     for(int k = 0; k < input->n_species; ++k){
-        inverse_boundary_shift(input, aux[k], sources[k], indices);
+        inverse_boundary_shift(input, aux[0]+k*step, sources[k], indices);
+        for(int i = 0; i < input->pos_dims; ++i){
+            input->pos_points[i] -= 2 * input->padding;
+        }
+    }
+    for(int i = 0; i < input->pos_dims; ++i){
+        input->pos_points[i] += 2 * input->padding;
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
