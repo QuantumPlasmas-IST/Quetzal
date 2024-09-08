@@ -5,7 +5,10 @@ import h5py
 import scipy as scp
 
 #############################
-name = 'anomalous'
+name = 'anomalousK'
+nk=5
+fitC = -2
+fitM = 0.5
 #############################
 
 # Allows the use of LateX notation in labels
@@ -24,7 +27,7 @@ mom_min = file.attrs['Momentum Min.']
 mom_max = file.attrs['Momentum Max.']
 Nt = file.attrs['Number of Timesteps']
 diag_f = file.attrs['Diagnostic Frequency']
-pos_num = file.attrs['Number of Position Points'][0]-4
+pos_num = file.attrs['Number of Position Points'][0]
 mom_num = file.attrs['Number of Momentum Points'][0]
 dx = file.attrs['Position Delta'][0]
 dt = file.attrs['Time Delta']
@@ -32,12 +35,21 @@ dt = file.attrs['Time Delta']
 kmax = 2*np.pi/dx
 dk = 2*np.pi/(pos_max[0] - pos_min[0])
 
+Dt = dt*diag_f
+wmax = 2*np.pi/Dt
+dw = 2*np.pi/(Nt*dt)
+
 qs = np.linspace(-kmax/2,kmax/2,pos_num)
 
 n_figs = (Nt)//diag_f
 
 Srho = np.zeros(n_figs)
 Sphi = np.zeros(n_figs)
+
+fullRho = np.zeros((n_figs,pos_num))
+fullPhi = np.zeros((n_figs,pos_num))
+
+print(nk*dk)
 
 for i in range(n_figs):
 
@@ -48,19 +60,60 @@ for i in range(n_figs):
     Frho = scp.fft.fftshift(scp.fft.fft(rho))
     Fphi = scp.fft.fftshift(scp.fft.fft(phi))
 
-    Srho[i] = np.max(np.abs(Frho))
-    Sphi[i] = np.max(np.abs(Fphi))
+    Srho[i] = np.abs(Frho)[pos_num//2+nk]
+    Sphi[i] = np.abs(Fphi)[pos_num//2+nk]
 
-plt.plot(np.linspace(0,Nt*dt,n_figs), Srho)
+    fullRho[i,:] = rho
+    fullPhi[i,:] = phi 
+
+Orho = np.abs(scp.fft.fftshift(scp.fft.fft2(fullRho)))**2
+Ophi = np.abs(scp.fft.fftshift(scp.fft.fft2(fullPhi)))**2
+
+timebase = np.linspace(dt*diag_f, dt*diag_f*n_figs, n_figs-1)
+
+plt.plot(timebase, Srho[1:])
+plt.plot(timebase, np.min(Srho)*np.exp(fitM*(timebase-fitC)))
 plt.xlabel(r"$t$ [$\omega_{pe}^{-1}$]")
 plt.ylabel(r"Spectral Density") 
+plt.yscale('log')
+#plt.xlim((0,50))
+plt.ylim((0.5*np.min(Srho), 2*np.max(Srho)))
 plt.tight_layout()
 plt.savefig("./img/"+name+"_charge_growth"+".png", dpi=100)
 plt.close()
 
-plt.plot(np.linspace(0,Nt*dt,n_figs), Sphi)
+plt.plot(np.linspace(dt*diag_f, dt*diag_f*n_figs, n_figs-1), Sphi[1:])
 plt.xlabel(r"$t$ [$\omega_{pe}^{-1}$]")
 plt.ylabel(r"Spectral Density") 
+plt.yscale('log')
+#plt.xlim((0,500))
+plt.ylim((0.5*np.min(Sphi), 2*np.max(Sphi)))
 plt.tight_layout()
 plt.savefig("./img/"+name+"_field_growth"+".png", dpi=100)
+plt.close()
+
+T = 10
+alpha = T * np.log(4)
+beta = (T**2) * ((np.pi**2)/6) 
+sc = plt.imshow(np.log10(Orho+1e-5), extent = (-kmax/2-dk/2,kmax/2-dk/2,-wmax/2-dw/2,wmax/2-dw/2), aspect='auto', origin = 'lower')
+plt.plot(qs, np.sqrt(np.pi * 2 * 10 * qs + 3*beta/alpha * qs**2), c = 'r')     # 2D quadratic
+plt.xlim((-0.5,0.5))
+plt.ylim((0,6))
+#plt.clim((-10,7))
+plt.xlabel(r"$k_x$[$\omega_{pe} c^{-1}$]")
+plt.ylabel(r"$\omega$[$\omega_{pe}$]")
+plt.colorbar(sc)
+plt.tight_layout()
+plt.savefig("./img/"+name+"_charge_omegas.png", dpi=200)
+plt.close()
+
+sc = plt.imshow(np.log10(Ophi+1e-5), extent = (-kmax/2-dk/2,kmax/2-dk/2,-wmax/2-dw/2,wmax/2-dw/2), aspect='auto', origin = 'lower')
+#plt.xlim((-10,10))
+#plt.ylim((0,6))
+#plt.clim((-10,7))
+plt.xlabel(r"$k_x$[$\omega_{pe} c^{-1}$]")
+plt.ylabel(r"$\omega$[$\omega_{pe}$]")
+plt.colorbar(sc)
+plt.tight_layout()
+plt.savefig("./img/"+name+"_field_omegas.png", dpi=200)
 plt.close()

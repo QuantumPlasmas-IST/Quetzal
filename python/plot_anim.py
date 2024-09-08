@@ -6,7 +6,7 @@ import scipy as scp
 from celluloid import Camera
 
 #############################
-name = 'anomalous'
+name = 'anomalousF'
 #############################
 
 # Allows the use of LateX notation in labels
@@ -26,7 +26,7 @@ mom_min = file.attrs['Momentum Min.']
 mom_max = file.attrs['Momentum Max.']
 Nt = file.attrs['Number of Timesteps']
 #Nt=10050
-diag_f = file.attrs['Diagnostic Frequency']
+diag_f = file.attrs['Full Diagnostic Frequency']
 pos_num = file.attrs['Number of Position Points']
 n_figs = (Nt)//diag_f
 

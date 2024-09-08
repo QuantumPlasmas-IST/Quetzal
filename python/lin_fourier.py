@@ -7,9 +7,9 @@ import scipy.optimize as opt
 import mpmath as mpm
 
 #############################
-name = 'dispersion_2DFermiLinear4'
-T = 0.05
-u = 0.05
+name = 'dispersion_2DFermiLinearA'
+T = 1
+u = 0.0
 wpe = np.sqrt(2)
 ge = np.pi
 #############################
@@ -31,7 +31,7 @@ pos_min = file.attrs['Position Min.']
 pos_max = file.attrs['Position Max.']
 mom_min = file.attrs['Momentum Min.']
 mom_max = file.attrs['Momentum Max.']
-Nt = file.attrs['Number of Timesteps']
+Nt = 61174#file.attrs['Number of Timesteps']
 diag_f = file.attrs['Diagnostic Frequency']
 pos_num = file.attrs['Number of Position Points'][0]
 mom_num = file.attrs['Number of Momentum Points'][0]

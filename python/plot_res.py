@@ -5,8 +5,8 @@ import h5py
 import scipy as scp
 
 #############################
-name = 'anomalous'
-iter = 0
+name = 'anomalousD'
+iter = 39000
 #############################
 
 # Allows the use of LateX notation in labels

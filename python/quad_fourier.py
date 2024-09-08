@@ -17,7 +17,7 @@ wp2 = 1
 
 # Allows the use of LateX notation in labels
 plt.rcParams['text.usetex'] = True
-plt.rcParams.update({'font.size': 15})
+plt.rcParams.update({'font.size': 18})
 
 # Creates movie
 fig = plt.figure()
@@ -85,7 +85,7 @@ qs = np.linspace(0,50,1000)
 sc = plt.imshow(np.log10(Srho+1e-5), extent = (-kmax/2-dk/2,kmax/2-dk/2,-wmax/2-dw/2,wmax/2-dw/2), aspect='auto', origin = 'lower')
 plt.plot(qs, np.sqrt(wp2 * qs + 3 * T * qs**2), c = 'r')                    # 2D Maxwell
 #plt.plot(qs, np.sqrt(ge * alpha * qs + 3*beta/alpha * qs**2), c = 'r')     # 2D Fermi
-plt.plot(qs, qs, c = 'r')     # Damping threshold
+#plt.plot(qs, qs, c = 'r')     # Damping threshold
 plt.xlim((-10,10))
 plt.ylim((0,6))
 #plt.clim((-10,7))
@@ -212,12 +212,12 @@ def damping_rate_max(func_k, func_T):
     func_p = func_w/func_k
     return np.pi * func_w / (4 * func_k) * maxwell_derivative(func_p,func_T)
 
-landau_size=100
+landau_size=30
 exp_damps = np.zeros(landau_size)
 
-ptest=70
+ptest=21
 
-for it in range(20,100):
+for it in range(0,30):
 
     print(it)
 
@@ -236,8 +236,8 @@ for it in range(20,100):
         divs=20
     if(slic>14):
         divs=30
-    if(slic>21):
-        divs=40
+    if(slic>16):
+        divs=50
         cutoff=0.05
 
     b, a = scp.signal.butter(5, cutoff, btype='low')
@@ -253,11 +253,14 @@ for it in range(20,100):
     
     peaks,_ = scp.signal.find_peaks(signal_raw)
     peaks2,_= scp.signal.find_peaks(-signal_raw[peaks])
+    #peaks = np.append([0],peaks)
     threshold = 100
-    if(slic>=50):
+    if(slic>=17):
         threshold=50
-    if(slic>=65):
-        threshold=25
+    if(slic>=20):
+        threshold=35
+    if(slic>=23):
+        threshold=30
     params, covs = opt.curve_fit(line, times[peaks[times[peaks]<threshold]], signal_raw[peaks[times[peaks]<threshold]])
     
     exp_damps[it] = params[0]
@@ -288,18 +291,20 @@ for it in range(20,100):
 
 th_damps = np.zeros(landau_size*2)
 p_theo = np.linspace(1,landau_size*2,landau_size*2,endpoint=True)
+p_exp = np.linspace(1,landau_size,landau_size,endpoint=True)
 for i in range(landau_size*2):
     #th_damps[i] = damping_rate(np.linspace(1,landau_size,landau_size,endpoint=True)[i]*dk,u,T)
-    th_damps[i] = damping_rate_max(p_theo[i]*dk,T)
+    th_damps[i] = damping_rate(p_theo[i]*dk,u,T)
 
-plt.plot(np.linspace(1,landau_size*2,landau_size*2,endpoint=True)*dk, -th_damps)
-plt.scatter(np.linspace(1,landau_size,landau_size,endpoint=True)*dk, -exp_damps,c='r',s=100,marker='+',linewidths=1)
-plt.scatter(np.array([ptest])*dk, -exp_damps[ptest-1])
+plt.plot(p_theo*dk*2, -th_damps*2)
+plt.scatter(p_exp*dk, -exp_damps,c='r',s=100,marker='+',linewidths=1, label = r"$\mu = 0.005$ $m_0 (l_0/t_0)^2$")
+plt.scatter(np.array([1000])*dk, -exp_damps[ptest-1], label = r"$T = 0.01$ $m_0 (l_0/t_0)^2$")
 #plt.yscale('log')
-plt.xlim((0,10))
+plt.xlim((0,3))
 plt.ylim((-0.02,0.2))
 plt.xlabel(r"$k_x\cdot l_0$")
 plt.ylabel(r"$-\gamma\cdot t_0$")
+plt.legend(markerscale=0)
 plt.tight_layout()
 plt.savefig("./img/"+name+"_landau.png", dpi=200)
 plt.close()
