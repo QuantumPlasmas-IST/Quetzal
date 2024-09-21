@@ -177,3 +177,12 @@ REAL flattened_quad_fermi(int n, REAL* x, REAL* p){
 
     return sqrt(2*M_PI*p[1]) * gsl_sf_fermi_dirac_mhalf(-(x[0]/2 - p[0] - fermi_shift) / p[1]);
 } // NEW VERSION WITH PROPER FERMI SHIFT  */
+
+REAL dirac_delta(int n, REAL* x, REAL* p){
+    int check = 1;
+    for (int i = 0; i < n; ++i){
+        if (fabs(x[i]-p[1+i])>1e-5) check = 0;
+    }
+    if (check) return p[0];
+    return 0;
+}

@@ -109,6 +109,12 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
         if(!strcmp(input->kernel_names[i],"3Dpoisson")){
             input->kernels[i]=&poisson_3D;
         }
+        if(!strcmp(input->kernel_names[i],"2Dsoftcore")){
+            input->kernels[i]=&softcore_2D;
+        }
+        if(!strcmp(input->kernel_names[i],"3Dsoftcore")){
+            input->kernels[i]=&softcore_3D;
+        }
 
         //Forces
         if(!strcmp(input->force_names[i],"gradient")){
@@ -270,6 +276,13 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
         if(!strcmp(input->mom_init_names[i],"sphere")){
             input->mom_inits[i]=&sphere;
             for (int j = 0; j < 2+input->mom_dims; ++j){
+                input->mom_init_params[i][j]=mom_parameters[mom_param_count];
+                mom_param_count++;
+            }
+        }
+        if(!strcmp(input->mom_init_names[i],"dirac delta")){
+            input->mom_inits[i]=&dirac_delta;
+            for (int j = 0; j < 1+input->mom_dims; ++j){
                 input->mom_init_params[i][j]=mom_parameters[mom_param_count];
                 mom_param_count++;
             }

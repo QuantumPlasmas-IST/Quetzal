@@ -6,7 +6,7 @@ import scipy as scp
 from celluloid import Camera
 
 #############################
-name = 'anomalousF'
+name = 'softcore1D'
 #############################
 
 # Allows the use of LateX notation in labels
@@ -34,7 +34,6 @@ for i in range(n_figs):
 
     result = file['/Species'+str(i*diag_f)]
     positrons = result[0]
-    electrons = result[1]
     potential = file['/Fields'+str(i*diag_f)][0]['real']
     charge = file['/Sources'+str(i*diag_f)][0]['real']
 
@@ -43,7 +42,7 @@ for i in range(n_figs):
 
     print("timestep "+str(i*diag_f))
 
-    sc = plt.imshow((positrons-electrons).T, extent = (pos_min[0]-0.05,pos_max[0]+0.05,mom_min[0]-0.05,mom_max[0]+0.05), aspect='auto', origin = 'lower')
+    sc = plt.imshow((positrons).T, extent = (pos_min[0]-0.05,pos_max[0]+0.05,mom_min[0]-0.05,mom_max[0]+0.05), aspect='auto', origin = 'lower')
     plt.xlabel(r"$x$ [$c \omega_{pe}^{-1}$]")
     plt.ylabel(r"$p$ [$m_e c$]")
     plt.plot(np.linspace(pos_min[0],pos_max[0],pos_num[0]), potential, c='r')

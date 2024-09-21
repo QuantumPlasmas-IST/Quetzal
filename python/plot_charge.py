@@ -5,8 +5,8 @@ import h5py
 import scipy as scp
 
 #############################
-name = 'softcore1D3'
-iter = 50000
+name = 'softcore1D2'
+iter = 1000
 #############################
 
 # Allows the use of LateX notation in labels
@@ -24,9 +24,6 @@ def func2(x):
 # Reads Test_Data.h5 file in ../data/ directory
 file=h5py.File('./output/'+name+'.h5','r')
 
-electrons = file['/Species'+str(iter)][0]
-#positrons = file['/Species'+str(iter)][1]
-species = electrons
 potential = file['/Fields'+str(iter)][0]['real']
 pot_im = file['/Fields'+str(iter)][0]['imaginary']
 charge = file['/Sources'+str(iter)][0]['real']
@@ -39,22 +36,19 @@ mom_max = file.attrs['Momentum Max.'][0]
 pos_num = file.attrs['Number of Position Points'][0]
 dx = file.attrs['Position Delta'][0]
 dt = file.attrs['Time Delta']
-padding=2
 
-fig, axs = plt.subplots(layout='constrained')
-sc = plt.imshow(species.T, extent = (pos_min-0.05,pos_max+0.05,mom_min-0.05,mom_max+0.05), aspect='auto', origin = 'lower')
-#plt.tight_layout()
-#plt.plot(np.linspace(pos_min,pos_max,pos_num), species[:,50], c='b')
-print(np.shape(species))
-plt.scatter(np.linspace(pos_min,pos_max,pos_num), scale*potential, c='r', s=0.2)
-plt.plot(np.linspace(pos_min,pos_max,pos_num), scale*charge, c='y', linewidth=1)
-secay = axs.secondary_yaxis('right', functions=(func1, func2))
+kernel = np.zeros(512)
+for i in range(253,259):
+    kernel[i] = 1
+potential2 = np.convolve(charge,kernel,mode='same')
+
+plt.plot(np.linspace(pos_min,pos_max,pos_num), charge, c='b')
+plt.plot(np.linspace(pos_min,pos_max,pos_num), potential, c='r')
+#plt.plot(np.linspace(pos_min,pos_max,pos_num), potential2, c='g')
 plt.xlabel(r"$x$ [$c \omega_{pe}^{-1}$]")
-plt.ylabel(r"$p$ [$m_e c$]")
 plt.title(r"$t = $ "+str(iter*dt)+r" $\omega_{pe}^{-1}$") 
-plt.colorbar(sc)
-#plt.gca().set_aspect('equal')
-plt.savefig("./img/"+name+"_"+str(iter)+".png", dpi=500)
+plt.tight_layout()
+plt.savefig("./img/"+name+"_charge_"+str(iter)+".png", dpi=500)
 
 #print(np.amax(potential))
 #print(np.argmax(potential))

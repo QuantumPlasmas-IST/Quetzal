@@ -20,3 +20,26 @@ COMPLEX poisson_3D(int n_dims, COMPLEX density, REAL* wavevector){
     if (q < 1e-8) return 0;
     return density/q;
 }
+
+COMPLEX softcore_2D(int n_dims, COMPLEX density, REAL* wavevector){
+    REAL q = 0;
+    for(int i = 0; i < n_dims; ++i){
+        q += wavevector[i]*wavevector[i];
+    }
+    q = sqrt(q);
+
+    if (q < 1e-8) return 1/2;
+
+    return density * j1(q) / q;
+}
+
+COMPLEX softcore_3D(int n_dims, COMPLEX density, REAL* wavevector){
+    REAL q = 0;
+    for(int i = 0; i < n_dims; ++i){
+        q += wavevector[i]*wavevector[i];
+    }
+    q = sqrt(q);
+
+    if (q < 1e-8) return 1/3;
+    return density * (sin(q) - q * cos(q))/(q*q*q);
+}

@@ -32,7 +32,7 @@ pos_min = file.attrs['Position Min.']
 pos_max = file.attrs['Position Max.']
 mom_min = file.attrs['Momentum Min.']
 mom_max = file.attrs['Momentum Max.']
-Nt = file.attrs['Number of Timesteps']//100
+Nt = file.attrs['Number of Timesteps']//200
 diag_f = file.attrs['Diagnostic Frequency']
 pos_num = file.attrs['Number of Position Points'][0]
 mom_num = file.attrs['Number of Momentum Points'][0]
@@ -170,6 +170,7 @@ Dphi = np.abs(scp.fft.fftshift(scp.fft.fft(phi,axis=-1),axes=-1))
 
 sc = plt.imshow(np.log(Drho+1e-5), extent = (-kmax/2-dk/2,kmax/2-dk/2,0,Nt*dt), aspect='auto', origin = 'lower')
 plt.xlim((-15,15))
+plt.plot(qs, np.sqrt(-scp.special.jv(1,qs)*qs), c = 'r')     # 2D Fermi
 #plt.ylim((0,6))
 plt.xlabel(r"$k_x$[$\omega_{pe} c^{-1}$]")
 plt.ylabel(r"$t$[$\omega_{pe}^{-1}$]")

@@ -23,6 +23,7 @@ REAL double_quad_maxwell(int n, REAL* x, REAL* p);
 REAL circle(int n, REAL* x, REAL* p);
 REAL sphere(int n, REAL* x, REAL* p);
 REAL flattened_quad_fermi(int n, REAL* x, REAL* p);
+REAL dirac_delta(int n, REAL* x, REAL* p);
 
 
 #endif
