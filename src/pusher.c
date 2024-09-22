@@ -2,7 +2,42 @@
 
 REAL** solve(input_t* input){
 
-    // Allocating AAALLLLLL the memory //
+    // Setting up MPI-FFT //
+
+    int* fft_ns = malloc(sizeof(int) * input->pos_dims);
+    int* fft_hi = malloc(sizeof(int) * input->pos_dims);
+    int* fft_lo = malloc(sizeof(int) * input->pos_dims);
+    
+    int fftsize,sendsize,recvsize;
+    int fft_is_bigger = 0;
+
+    for (int i = 0; i < input->pos_dims; ++i){
+        fft_lo[i] = input->parallel_pos[i] * (input->pos_points[i]-2*input->padding);
+        fft_hi[i] = (input->parallel_pos[i]+1) * (input->pos_points[i]-2*input->padding) - 1;
+        fft_ns[i] = input->procs[i] * (input->pos_points[i]-2*input->padding);
+    }
+    
+    if(input->pos_dims == 2){
+        fft2d_create(MPI_COMM_WORLD, 2, &input->fft);
+        fft2d_setup(input->fft, fft_ns[1], fft_ns[0], fft_lo[1], fft_hi[1], fft_lo[0], fft_hi[0], fft_lo[1], fft_hi[1], fft_lo[0], fft_hi[0], 0, &fftsize, &sendsize, &recvsize);
+        if(fftsize > input->pos_total){
+            fft_is_bigger = 1;
+        }
+    }
+
+    if(input->pos_dims == 3){
+        fft3d_create(MPI_COMM_WORLD, 2, &input->fft);
+        fft3d_setup(input->fft, fft_ns[2], fft_ns[1], fft_ns[0], fft_lo[2], fft_hi[2], fft_lo[1], fft_hi[1], fft_lo[0], fft_hi[0], fft_lo[2], fft_hi[2], fft_lo[1], fft_hi[1], fft_lo[0], fft_hi[0], 0, &fftsize, &sendsize, &recvsize);
+        if(fftsize > input->pos_total){
+            fft_is_bigger = 1;
+        }
+    }
+
+    free(fft_ns);
+    free(fft_hi);
+    free(fft_lo);
+
+    // Allocating all the memory //
 
     REAL** species = malloc(input->n_species * sizeof(REAL*));
     REAL** species_aux1 = malloc(input->n_species * sizeof(REAL*));
@@ -45,8 +80,14 @@ REAL** solve(input_t* input){
     species_aux2[0] = malloc(input->n_species * input->pos_total * input->mom_total * sizeof(REAL));
     sources_aux[0] = malloc(input->n_species * input->pos_total * sizeof(COMPLEX));
     fields_aux[0] = calloc(input->n_species * input->pos_total, sizeof(COMPLEX));
-    sources[0] = malloc(input->n_fields * input->pos_total * sizeof(COMPLEX));
-    fields[0] = malloc(input->n_fields * input->pos_total * sizeof(COMPLEX));
+    if(fft_is_bigger){
+        sources[0] = malloc(input->n_fields * fftsize * sizeof(COMPLEX));
+        fields[0] = malloc(input->n_fields * fftsize * sizeof(COMPLEX));
+    }
+    else{
+        sources[0] = malloc(input->n_fields * input->pos_total * sizeof(COMPLEX));
+        fields[0] = malloc(input->n_fields * input->pos_total * sizeof(COMPLEX)); 
+    }
 
     for (int i = 0; i < input->n_species; ++i){
         species[i] = species[0] + i * input->pos_total * input->mom_total;
@@ -62,50 +103,20 @@ REAL** solve(input_t* input){
     }
 
     for (int i = 0; i < input->n_fields; ++i){
-        fields[i] = fields[0] + i * input->pos_total;
-        sources[i] = sources[0] + i * input->pos_total;
+        if(fft_is_bigger){
+            fields[i] = fields[0] + i * fftsize;
+            sources[i] = sources[0] + i * fftsize;
+        }
+        else{
+            fields[i] = fields[0] + i * input->pos_total;
+            sources[i] = sources[0] + i * input->pos_total;
+        }
     }
 
     int* is = malloc(sizeof(int) * (input->pos_dims+input->mom_dims));
     REAL* aux_momentum = malloc(input->mom_dims * sizeof(REAL));
 
     if(!input->rank) printf("Memory Allocation Complete\n");
-
-    // Setting up MPI-FFT //
-
-    int* fft_ns = malloc(sizeof(int) * input->pos_dims);
-    int* fft_hi = malloc(sizeof(int) * input->pos_dims);
-    int* fft_lo = malloc(sizeof(int) * input->pos_dims);
-    
-    int fftsize,sendsize,recvsize;
-
-    for (int i = 0; i < input->pos_dims; ++i){
-        fft_lo[i] = input->parallel_pos[i] * (input->pos_points[i]-2*input->padding);
-        fft_hi[i] = (input->parallel_pos[i]+1) * (input->pos_points[i]-2*input->padding) - 1;
-        fft_ns[i] = input->procs[i] * (input->pos_points[i]-2*input->padding);
-    }
-    
-    if(input->pos_dims == 2){
-        fft2d_create(MPI_COMM_WORLD, 2, &input->fft);
-        fft2d_setup(input->fft, fft_ns[1], fft_ns[0], fft_lo[1], fft_hi[1], fft_lo[0], fft_hi[0], fft_lo[1], fft_hi[1], fft_lo[0], fft_hi[0], 0, &fftsize, &sendsize, &recvsize);
-        if(fftsize > input->pos_total){
-            printf("ERROR, INSUFICIENT MEMORY FOR PERFORMING FFT (%d vs %d)\n\n", fftsize, input->pos_total);
-            return NULL;
-        }
-    }
-
-    if(input->pos_dims == 3){
-        fft3d_create(MPI_COMM_WORLD, 2, &input->fft);
-        fft3d_setup(input->fft, fft_ns[2], fft_ns[1], fft_ns[0], fft_lo[2], fft_hi[2], fft_lo[1], fft_hi[1], fft_lo[0], fft_hi[0], fft_lo[2], fft_hi[2], fft_lo[1], fft_hi[1], fft_lo[0], fft_hi[0], 0, &fftsize, &sendsize, &recvsize);
-        if(fftsize > input->pos_total){
-            printf("ERROR, INSUFICIENT MEMORY FOR PERFORMING FFT (%d vs %d)\n\n", fftsize, input->pos_total);
-            return NULL;
-        }
-    }
-
-    free(fft_ns);
-    free(fft_hi);
-    free(fft_lo);
 
     // Applying initial conditions //
 
@@ -118,9 +129,9 @@ REAL** solve(input_t* input){
     apply_bound_cond(input, species_aux2, left_ghost_buffer, right_ghost_buffer);
     integrate_source(input, species, sources, sources_aux);
 
-    // Algorithm //
-
     if(!input->rank) printf("Initialization Complete\n");
+
+    // Algorithm //
 
     if(!strcmp(input->pusher,"runge kutta")){
         for(int i = 0; i < input->n_timesteps; ++i){
