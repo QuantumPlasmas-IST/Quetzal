@@ -6,18 +6,22 @@ SRCDIR := src
 
 CCFLAGS := -pedantic -g
 
-#CC := gcc
-CC := h5pcc
-
 # Libraries
 
 # PC
-MISC_CLINKFLAGS = -L/usr/local/lib -lgsl -lgslcblas -lm -L/home/diogo/fftMPI_source/fftmpi-master/src  -lfft3dmpi -lfft2dmpi
-MISC_CCOMPILEFLAGS = -I/usr/local/include -I/home/diogo/fftMPI_source/fftmpi-master/src
+#CC := h5pcc
+#MISC_CLINKFLAGS = -L/usr/local/lib -lgsl -lgslcblas -lm -L/home/diogo/fftMPI_source/fftmpi-master/src  -lfft3dmpi -lfft2dmpi
+#MISC_CCOMPILEFLAGS = -I/usr/local/include -I/home/diogo/fftMPI_source/fftmpi-master/src
 
 # Mac
+#CC := h5pcc
 #MISC_CLINKFLAGS = -L/usr/lib64 -lgsl -lgslcblas -lm
 #MISC_CCOMPILEFLAGS = -I/usr/include
+
+# Accelerates
+CC := /data/dsimoes/HDF5_install/bin/h5pcc
+MISC_CLINKFLAGS = -L/data/dsimoes/gsl_install/lib -lgsl -lgslcblas -lm -L/data/dsimoes/fftMPI_source/fftmpi-master/src -lfft3dmpi -lfft2dmpi
+MISC_CCOMPILEFLAGS = -I/data/dsimoes/gsl_install/include -I/data/dsimoes/fftMPI_source/fftmpi-master/src
 
 VPATH = main:src
 
@@ -31,7 +35,7 @@ $(LIBDIR)/libquetzal.a: $(OBJ)
 	@echo make lib...
 	ar ruv $@ $^
 	ranlib $@
-    
+
 %.exe: $(BINDIR)/%.o $(LIBDIR)/libquetzal.a
 	@echo LINKING!...
 	$(CC) $(CCFLAGS) -I $(SRCDIR) $(MISC_CCOMPILEFLAGS) $< -o $(BINDIR)/$@ -L lib -lquetzal $(MISC_CLINKFLAGS)
