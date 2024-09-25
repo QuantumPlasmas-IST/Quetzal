@@ -147,17 +147,6 @@ REAL quad_maxwell(int n, REAL* x, REAL* p){
     return p[0] * exp(- x[0]/2 / p[1]) / sqrt(2 * M_PI * p[1]);
 }
 
-REAL circle(int n, REAL* x, REAL* p){
-    if (x[0] > p[1]) return 0;
-    if (x[0] < -p[1]) return 0;
-    return 2*p[0] / (M_PI * p[1]) * sqrt(1-x[0]*x[0]/(p[1]*p[1]));
-}
-
-REAL sphere(int n, REAL* x, REAL* p){
-    if (x[0] > p[1]) return 0;
-    return 3*p[0] / (4 * p[1]) * sqrt(1-x[0]*x[0]/(p[1]*p[1]));
-}
-
 REAL flattened_quad_fermi(int n, REAL* x, REAL* p){
     x[0] = (x[0] - p[2])*(x[0] - p[2]);
     for(int i = 1; i < n; ++i){
@@ -185,4 +174,12 @@ REAL dirac_delta(int n, REAL* x, REAL* p){
     }
     if (check) return p[0];
     return 0;
+}
+
+REAL sine(int n, REAL* x, REAL* p){
+    x[0] = sin(p[2] * x[0]);
+    for(int i = 1; i < n; ++i){
+        x[0] *= sin(p[2+i] * x[i]);
+    }
+    return p[0] + p[1] * x[0];
 }

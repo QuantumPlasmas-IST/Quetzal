@@ -7,7 +7,7 @@ import scipy.optimize as opt
 import mpmath as mpm
 
 #############################
-name = 'softcore1D9'
+name = 'softcore1DA'
 T = 0.1
 u = 2
 ge = np.pi
@@ -32,8 +32,8 @@ pos_min = file.attrs['Position Min.']
 pos_max = file.attrs['Position Max.']
 mom_min = file.attrs['Momentum Min.']
 mom_max = file.attrs['Momentum Max.']
-Nt = file.attrs['Number of Timesteps']
-#Nt=40000
+#Nt = file.attrs['Number of Timesteps']
+Nt=350000
 diag_f = file.attrs['Diagnostic Frequency']
 pos_num = file.attrs['Number of Position Points'][0]
 mom_num = file.attrs['Number of Momentum Points'][0]
@@ -85,11 +85,12 @@ qs = np.linspace(0,50,1000)
 
 sc = plt.imshow(np.log10(Srho+1e-7), extent = (-kmax/2-dk/2,kmax/2-dk/2,-wmax/2-dw/2,wmax/2-dw/2), aspect='auto', origin = 'lower')
 #plt.plot(qs, np.sqrt(wp2 * qs + 3 * T * qs**2), c = 'r')                  # 2D Maxwell
-plt.plot(qs, np.sqrt(scp.special.jv(1,qs)*qs), c = 'r')     # 2D Fermi
+plt.plot(qs, np.sqrt(scp.special.jv(1,qs)*qs+3*T*qs**2), c = 'r')     # 2D Fermi
+plt.plot(qs, np.sqrt(-scp.special.jv(1,qs)*qs-3*T*qs**2), c = 'r', linestyle="dashed")
 #plt.plot(qs, qs, c = 'r')     # Damping threshold
-plt.xlim((0,10))
+plt.xlim((-5,10))
 plt.ylim((0,3))
-plt.clim((-4,5))
+plt.clim((-4,0))
 plt.xlabel(r"$k a$")
 plt.ylabel(r"$\omega/\omega_{coll}$")
 plt.colorbar(sc)

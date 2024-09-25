@@ -9,14 +9,14 @@ CCFLAGS := -pedantic -g
 # Libraries
 
 # PC
-CC := h5pcc
-MISC_CLINKFLAGS = -L/usr/local/lib -lgsl -lgslcblas -lm -L/home/diogo/fftMPI_source/fftmpi-master/src  -lfft3dmpi -lfft2dmpi
-MISC_CCOMPILEFLAGS = -I/usr/local/include -I/home/diogo/fftMPI_source/fftmpi-master/src
+#CC := h5pcc
+#MISC_CLINKFLAGS = -L/usr/local/lib -lgsl -lgslcblas -lm -L/home/diogo/fftMPI_source/fftmpi-master/src  -lfft3dmpi -lfft2dmpi
+#MISC_CCOMPILEFLAGS = -I/usr/local/include -I/home/diogo/fftMPI_source/fftmpi-master/src
 
 # Mac
-#CC := h5pcc
-#MISC_CLINKFLAGS = -L/usr/lib64 -lgsl -lgslcblas -lm
-#MISC_CCOMPILEFLAGS = -I/usr/include
+CC := h5pcc
+MISC_CLINKFLAGS = -L/usr/lib64 -lgsl -lgslcblas -lm -L/home/dsimoes/fftmpi-master/src  -lfft3dmpi -lfft2dmpi
+MISC_CCOMPILEFLAGS = -I/usr/include -I/home/dsimoes/fftmpi-master/src
 
 # Accelerates
 #CC := /data/dsimoes/HDF5_install/bin/h5pcc
