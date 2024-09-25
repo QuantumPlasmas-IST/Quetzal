@@ -187,6 +187,13 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
                 pos_param_count++;
             }
         }
+        if(!strcmp(input->pos_init_names[i],"sine")){
+            input->pos_inits[i]=&sine;
+            for (int j = 0; j < 2+input->pos_dims; ++j){
+                input->pos_init_params[i][j]=pos_parameters[pos_param_count];
+                pos_param_count++;
+            }
+        }
 
         // Momentum Initial Condition
         if(!strcmp(input->mom_init_names[i],"gaussian")){
@@ -261,20 +268,6 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
         }
         if(!strcmp(input->mom_init_names[i],"quadratic maxwell")){
             input->mom_inits[i]=&quad_maxwell;
-            for (int j = 0; j < 2+input->mom_dims; ++j){
-                input->mom_init_params[i][j]=mom_parameters[mom_param_count];
-                mom_param_count++;
-            }
-        }
-        if(!strcmp(input->mom_init_names[i],"circle")){
-            input->mom_inits[i]=&circle;
-            for (int j = 0; j < 2+input->mom_dims; ++j){
-                input->mom_init_params[i][j]=mom_parameters[mom_param_count];
-                mom_param_count++;
-            }
-        }
-        if(!strcmp(input->mom_init_names[i],"sphere")){
-            input->mom_inits[i]=&sphere;
             for (int j = 0; j < 2+input->mom_dims; ++j){
                 input->mom_init_params[i][j]=mom_parameters[mom_param_count];
                 mom_param_count++;

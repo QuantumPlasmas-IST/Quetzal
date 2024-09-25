@@ -24,6 +24,7 @@ REAL circle(int n, REAL* x, REAL* p);
 REAL sphere(int n, REAL* x, REAL* p);
 REAL flattened_quad_fermi(int n, REAL* x, REAL* p);
 REAL dirac_delta(int n, REAL* x, REAL* p);
+REAL sine(int n, REAL* x, REAL* p);
 
 
 #endif
