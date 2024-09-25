@@ -5,8 +5,8 @@ import h5py
 import scipy as scp
 
 #############################
-name = 'softcore1D5'
-iter = 39000
+name = 'softcore2D'
+iter = 6000
 #############################
 
 # Allows the use of LateX notation in labels
@@ -37,23 +37,10 @@ pos_num = file.attrs['Number of Position Points'][0]
 dx = file.attrs['Position Delta'][0]
 dt = file.attrs['Time Delta']
 
-kernel = np.zeros(512)
-for i in range(253,259):
-    kernel[i] = 1
-potential2 = np.convolve(charge,kernel,mode='same')
-
-plt.plot(np.linspace(pos_min,pos_max,pos_num), charge, c='b')
-plt.plot(np.linspace(pos_min,pos_max,pos_num), potential, c='r')
-#plt.plot(np.linspace(pos_min,pos_max,pos_num), potential2, c='g')
-plt.xlabel(r"$x$ [$c \omega_{pe}^{-1}$]")
-plt.title(r"$t = $ "+str(iter*dt)+r" $\omega_{pe}^{-1}$") 
+sc = plt.imshow(charge, extent = (pos_min,pos_max,mom_min,mom_max), aspect='auto', origin = 'lower')
+plt.xlabel(r"$x / a$")
+plt.ylabel(r"$y / a$") 
+plt.colorbar()
 plt.tight_layout()
 plt.savefig("./img/"+name+"_charge_"+str(iter)+".png", dpi=500)
-
-#print(np.amax(potential))
-#print(np.argmax(potential))
-print("////////////////")
-point = int((2*pos_num)//5)
-point=pos_num//2
-#print(-charge[point])
-#print((potential[point+1]-2*potential[point]+potential[point-1])/dx**2)
+plt.close()

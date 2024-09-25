@@ -5,8 +5,8 @@ import h5py
 import scipy as scp
 
 #############################
-name = 'softcore1D3'
-iter = 50000
+name = 'softcore1DA'
+iter = 200
 #############################
 
 # Allows the use of LateX notation in labels
@@ -14,7 +14,7 @@ plt.rcParams['text.usetex'] = True
 plt.rcParams.update({'font.size': 15})
 
 # Set the scaling for the potential and charge density plots
-scale = 1
+scale = 0.1
 
 def func1(x):
     return x/scale
@@ -42,11 +42,11 @@ dt = file.attrs['Time Delta']
 padding=2
 
 fig, axs = plt.subplots(layout='constrained')
-sc = plt.imshow(species.T, extent = (pos_min-0.05,pos_max+0.05,mom_min-0.05,mom_max+0.05), aspect='auto', origin = 'lower')
+sc = plt.imshow(species.T, extent = (pos_min,pos_max,mom_min,mom_max), aspect='auto', origin = 'lower')
 #plt.tight_layout()
 #plt.plot(np.linspace(pos_min,pos_max,pos_num), species[:,50], c='b')
 print(np.shape(species))
-plt.scatter(np.linspace(pos_min,pos_max,pos_num), scale*potential, c='r', s=0.2)
+plt.plot(np.linspace(pos_min,pos_max,pos_num), potential/scale, c='r', linewidth=1)
 plt.plot(np.linspace(pos_min,pos_max,pos_num), scale*charge, c='y', linewidth=1)
 secay = axs.secondary_yaxis('right', functions=(func1, func2))
 plt.xlabel(r"$x$ [$c \omega_{pe}^{-1}$]")
