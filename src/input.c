@@ -28,6 +28,7 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
         input->pos_points[i] = input->pos_points[i]/input->procs[i];
         input->pos_min[i] += input->parallel_pos[i] * input->pos_points[i] * input->pos_delta[i];
         input->pos_max[i] = input->pos_min[i] + input->pos_points[i]*input->pos_delta[i];
+        input->fft_points[i] = input->pos_points[i];
         input->pos_points[i] += 2 * input->padding;
     }
     for(int i = 0; i < input->mom_dims; ++i){
@@ -103,6 +104,9 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
     for(int i = 0; i < input->n_fields; ++i){
         
         //Kernels
+        if(!strcmp(input->kernel_names[i],"density")){
+            input->kernels[i]=&density;
+        }
         if(!strcmp(input->kernel_names[i],"2Dpoisson")){
             input->kernels[i]=&poisson_2D;
         }
@@ -114,6 +118,12 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
         }
         if(!strcmp(input->kernel_names[i],"3Dsoftcore")){
             input->kernels[i]=&softcore_3D;
+        }
+        if(!strcmp(input->kernel_names[i],"2Dmaxwell")){
+            input->kernels[i]=&maxwell_2D;
+        }
+        if(!strcmp(input->kernel_names[i],"3Dmaxwell")){
+            input->kernels[i]=&maxwell_3D;
         }
 
         //Forces
@@ -128,6 +138,20 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
         }
         if(!strcmp(input->force_names[i],"magnetic")){
             input->forces[i]=&magnetic_force;
+        }
+
+        //Dynamics
+        if(!strcmp(input->dynamics_names[i],"2DmaxwellEx")){
+            input->dynamics[i]=&maxwell_2D_Ex;
+        }
+        if(!strcmp(input->dynamics_names[i],"2DmaxwellEy")){
+            input->dynamics[i]=&maxwell_2D_Ey;
+        }
+        if(!strcmp(input->dynamics_names[i],"2DmaxwellBz")){
+            input->dynamics[i]=&maxwell_2D_Bz;
+        }
+        if(!strcmp(input->dynamics_names[i],"none")){
+            input->dynamics[i]=&null_dynamics;
         }
 
         //Field initial conditions
@@ -280,6 +304,13 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
                 mom_param_count++;
             }
         }
+        if(!strcmp(input->mom_init_names[i],"anisotropic quadratic maxwell")){
+            input->mom_inits[i]=&anisotropic_quad_maxwell;
+            for (int j = 0; j < 1+2*input->mom_dims; ++j){
+                input->mom_init_params[i][j]=mom_parameters[mom_param_count];
+                mom_param_count++;
+            }
+        }
     }
 }
 
@@ -297,6 +328,7 @@ input_t* read_input(const char* name, int rank, int size){
     input->pos_dims = 0;
     input->mom_dims = 0;
     input->pos_points = NULL;
+    input->fft_points = NULL;
     input->mom_points = NULL;
     input->pos_total = 1;
     input->mom_total = 1;
@@ -314,8 +346,11 @@ input_t* read_input(const char* name, int rank, int size){
     input->operator = calloc(STR_SIZE, sizeof(char));
     input->kernel_names = NULL;
     input->kernels = NULL;
+    input->dynamics_names = NULL;
+    input->dynamics = NULL;
     input->force_names = NULL;
     input->forces = NULL;
+    input->field_type = NULL;
     input->pos_init_names = NULL;
     input->mom_init_names = NULL;
     input->field_init_names = NULL;
@@ -333,7 +368,9 @@ input_t* read_input(const char* name, int rank, int size){
     REAL* mom_parameters = NULL;
     REAL* field_parameters = NULL;
     input->padding = 1;
-    input->charges = NULL;
+    input->force_charges = NULL;
+    input->source_charges = NULL;
+    input->source_moments = NULL;
 
     char line[500];
 	FILE* file = fopen(name, "r");
@@ -449,8 +486,18 @@ input_t* read_input(const char* name, int rank, int size){
                     strcpy(num_part, "");
                     count++;
                 }   
+                if(!strcmp(txt_part,"DYNAMICS")){
+                    strcpy((input->dynamics_names)[count], num_part);     // Character (,) pushes back new value of max to array
+                    strcpy(num_part, "");
+                    count++;
+                }   
                 if(!strcmp(txt_part,"FORCE")){
                     strcpy((input->force_names)[count], num_part);     // Character (,) pushes back new value of max to array
+                    strcpy(num_part, "");
+                    count++;
+                }   
+                if(!strcmp(txt_part,"TYPE")){
+                    strcpy((input->field_type)[count], num_part);     // Character (,) pushes back new value of max to array
                     strcpy(num_part, "");
                     count++;
                 }   
@@ -459,8 +506,18 @@ input_t* read_input(const char* name, int rank, int size){
                     strcpy(num_part, "");
                     count++;
                 }
-                if(!strcmp(txt_part,"CHARGES")){
-                    (input->charges[0])[count] = atof(num_part);   // Character (,) pushes back new value of min to array
+                if(!strcmp(txt_part,"FORCE_CHARGES")){
+                    (input->force_charges[0])[count] = atof(num_part);   // Character (,) pushes back new value of min to array
+                    strcpy(num_part, "");
+                    count++;
+                }    
+                if(!strcmp(txt_part,"SOURCE_CHARGES")){
+                    (input->source_charges[0])[count] = atof(num_part);   // Character (,) pushes back new value of min to array
+                    strcpy(num_part, "");
+                    count++;
+                }    
+                if(!strcmp(txt_part,"SOURCE_MOMENTS")){
+                    (input->source_moments[0])[count] = atoi(num_part);   // Character (,) pushes back new value of min to array
                     strcpy(num_part, "");
                     count++;
                 }    
@@ -475,6 +532,7 @@ input_t* read_input(const char* name, int rank, int size){
             input->pos_max=malloc((input->pos_dims)*sizeof(REAL));
 
             input->pos_points=malloc((input->pos_dims)*sizeof(int));
+            input->fft_points=malloc((input->pos_dims)*sizeof(int));
 
             input->pos_bound_names=malloc((input->pos_dims)*sizeof(char*));
             char* aux_bound_names = calloc((input->pos_dims) * STR_SIZE, sizeof(char));
@@ -520,7 +578,9 @@ input_t* read_input(const char* name, int rank, int size){
 
             input->dispersions = malloc((input->n_species)*sizeof(disp_t));
 
-            input->charges = malloc(input->n_species * sizeof(REAL*));
+            input->force_charges = malloc(input->n_species * sizeof(REAL*));
+            input->source_charges = malloc(input->n_species * sizeof(REAL*));
+            input->source_moments = malloc(input->n_species * sizeof(int*));
 
             input->pos_init_names=malloc((input->n_species)*sizeof(char*));
             input->mom_init_names=malloc((input->n_species)*sizeof(char*));
@@ -555,18 +615,31 @@ input_t* read_input(const char* name, int rank, int size){
 
             input->kernel_names = malloc(input->n_fields * sizeof(char*));
             input->force_names = malloc(input->n_fields * sizeof(char*));
+            input->dynamics_names = malloc(input->n_fields * sizeof(char*));
+            input->field_type = malloc(input->n_fields * sizeof(char*));
 
             for (int i = 0; i < input->n_fields; ++i){
                 input->kernel_names[i] = calloc(STR_SIZE, sizeof(char));
                 input->force_names[i] = calloc(STR_SIZE, sizeof(char));
+                input->dynamics_names[i] = calloc(STR_SIZE, sizeof(char));
+                input->field_type[i] = calloc(STR_SIZE, sizeof(char));
             } 
 
             input->kernels = malloc((input->n_fields)*sizeof(kernel_t));
             input->forces = malloc((input->n_fields)*sizeof(force_t));
+            input->dynamics = malloc((input->n_fields)*sizeof(dynamics_t));
 
-            input->charges[0] = malloc(input->n_species * input->n_fields * sizeof(REAL));
+            input->force_charges[0] = malloc(input->n_species * input->n_fields * sizeof(REAL));
             for (int i = 1; i < input->n_species; ++i){
-                input->charges[i] = input->charges[0] + i*input->n_fields;
+                input->force_charges[i] = input->force_charges[0] + i*input->n_fields;
+            }
+            input->source_charges[0] = malloc(input->n_species * input->n_fields * sizeof(REAL));
+            for (int i = 1; i < input->n_species; ++i){
+                input->source_charges[i] = input->source_charges[0] + i*input->n_fields;
+            }
+            input->source_moments[0] = malloc(input->n_species * input->n_fields * sizeof(int));
+            for (int i = 1; i < input->n_species; ++i){
+                input->source_moments[i] = input->source_moments[0] + i*input->n_fields;
             }
 
             input->field_init_names=malloc((input->n_fields)*sizeof(char*));
@@ -602,7 +675,9 @@ input_t* read_input(const char* name, int rank, int size){
         if(!strcmp(txt_part,"MOM_BOUND")) strcpy((input->mom_bound_names)[count], num_part);
         if(!strcmp(txt_part,"DISP")) strcpy(input->dispersion_names[count],num_part);
         if(!strcmp(txt_part,"KERNEL")) strcpy(input->kernel_names[count],num_part);
+        if(!strcmp(txt_part,"DYNAMICS")) strcpy(input->dynamics_names[count],num_part);
         if(!strcmp(txt_part,"FORCE")) strcpy(input->force_names[count],num_part);
+        if(!strcmp(txt_part,"TYPE")) strcpy(input->field_type[count],num_part);
         if(!strcmp(txt_part,"PUSHER")) strcpy(input->pusher,num_part);
         if(!strcmp(txt_part,"DELTAT")) input->deltaT = atof(num_part);
         if(!strcmp(txt_part,"POS_PARAMS")) pos_parameters[count] = atof(num_part);
@@ -613,7 +688,9 @@ input_t* read_input(const char* name, int rank, int size){
         if(!strcmp(txt_part,"POS_DIAG_FREQ")) input->pos_diag_freq = atoi(num_part);
         if(!strcmp(txt_part,"MOM_DIAG_FREQ")) input->mom_diag_freq = atoi(num_part);
         if(!strcmp(txt_part,"PADDING")) input->padding = atoi(num_part);
-        if(!strcmp(txt_part,"CHARGES")) input->charges[0][count] = atof(num_part);
+        if(!strcmp(txt_part,"FORCE_CHARGES")) input->force_charges[0][count] = atof(num_part);
+        if(!strcmp(txt_part,"SOURCE_CHARGES")) input->source_charges[0][count] = atof(num_part);
+        if(!strcmp(txt_part,"SOURCE_MOMENTS")) input->source_moments[0][count] = atof(num_part);
 	}
 
     initialize_input(input, pos_parameters, mom_parameters, field_parameters);
@@ -684,8 +761,12 @@ void free_input(input_t* input){
     for (int i = 0; i < input->n_species; ++i){
         free(input->dispersion_names[i]);
     }
-    free(input->charges[0]);
-    free(input->charges);
+    free(input->force_charges[0]);
+    free(input->force_charges);
+    free(input->source_charges[0]);
+    free(input->source_charges);
+    free(input->source_moments[0]);
+    free(input->source_moments);
     free(input->dispersion_names);
     free(input->dispersions);
     free(input->pusher);
@@ -693,11 +774,16 @@ void free_input(input_t* input){
     for (int i = 0; i < input->n_fields; ++i){
         free(input->kernel_names[i]);
         free(input->force_names[i]);
+        free(input->field_type[i]);
+        free(input->dynamics_names[i]);
     }
     free(input->kernel_names);
     free(input->force_names);
+    free(input->field_type);
+    free(input->dynamics_names);
     free(input->kernels);
     free(input->forces);
+    free(input->dynamics);
 
     free(input->pos_inits);
     free(input->mom_inits);

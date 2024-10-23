@@ -7,6 +7,7 @@
 #include "mpi.h"
 
 void apply_bound_cond(input_t* input, REAL** species, REAL*** left_buffer, REAL*** right_buffer);
+void field_bound_cond(input_t* input, COMPLEX** fields, COMPLEX*** left_buffer, COMPLEX*** right_buffer, int fld);
 
 void dirichelet_bound(int total_dims, int* Ns, int dim, int padding, REAL* species);
 void periodic_bound(int total_dims, int* Ns, int dim, int padding, REAL* species);

@@ -5,8 +5,8 @@ import h5py
 import scipy as scp
 
 #############################
-name = 'softcore1DA'
-iter = 200
+name = 'anomalousJ_test2'
+iter = 2000
 #############################
 
 # Allows the use of LateX notation in labels
@@ -14,7 +14,7 @@ plt.rcParams['text.usetex'] = True
 plt.rcParams.update({'font.size': 15})
 
 # Set the scaling for the potential and charge density plots
-scale = 0.1
+scale = 10
 
 def func1(x):
     return x/scale
@@ -25,8 +25,8 @@ def func2(x):
 file=h5py.File('./output/'+name+'.h5','r')
 
 electrons = file['/Species'+str(iter)][0]
-#positrons = file['/Species'+str(iter)][1]
-species = electrons
+positrons = file['/Species'+str(iter)][1]
+species = electrons-positrons
 potential = file['/Fields'+str(iter)][0]['real']
 pot_im = file['/Fields'+str(iter)][0]['imaginary']
 charge = file['/Sources'+str(iter)][0]['real']
@@ -47,7 +47,7 @@ sc = plt.imshow(species.T, extent = (pos_min,pos_max,mom_min,mom_max), aspect='a
 #plt.plot(np.linspace(pos_min,pos_max,pos_num), species[:,50], c='b')
 print(np.shape(species))
 plt.plot(np.linspace(pos_min,pos_max,pos_num), potential/scale, c='r', linewidth=1)
-plt.plot(np.linspace(pos_min,pos_max,pos_num), scale*charge, c='y', linewidth=1)
+plt.plot(np.linspace(pos_min,pos_max,pos_num), scale/charge, c='y', linewidth=1)
 secay = axs.secondary_yaxis('right', functions=(func1, func2))
 plt.xlabel(r"$x$ [$c \omega_{pe}^{-1}$]")
 plt.ylabel(r"$p$ [$m_e c$]")

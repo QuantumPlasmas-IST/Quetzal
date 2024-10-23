@@ -5,8 +5,8 @@ import h5py
 import scipy as scp
 
 #############################
-name = 'softcore1D5'
-iter = 39000
+name = 'anomalousJ_test2'
+iter = 400
 #############################
 
 # Allows the use of LateX notation in labels

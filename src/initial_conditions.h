@@ -25,6 +25,7 @@ REAL sphere(int n, REAL* x, REAL* p);
 REAL flattened_quad_fermi(int n, REAL* x, REAL* p);
 REAL dirac_delta(int n, REAL* x, REAL* p);
 REAL sine(int n, REAL* x, REAL* p);
+REAL anisotropic_quad_maxwell(int n, REAL* x, REAL* p);
 
 
 #endif

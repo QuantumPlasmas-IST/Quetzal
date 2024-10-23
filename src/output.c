@@ -280,9 +280,6 @@ void write_fields(input_t* input, COMPLEX** fields, COMPLEX** aux, int* indices,
 
     for(int k = 0; k < input->n_fields; ++k){
         boundary_shift(input, fields[k], aux[0]+k*step, indices);
-        for(int i = 0; i < input->pos_dims; ++i){
-            input->pos_points[i] += 2 * input->padding;
-        }
     }
     for(int i = 0; i < input->pos_dims; ++i){
         input->pos_points[i] -= 2 * input->padding;
@@ -353,9 +350,6 @@ void write_fields(input_t* input, COMPLEX** fields, COMPLEX** aux, int* indices,
 
     for(int k = 0; k < input->n_fields; ++k){
         inverse_boundary_shift(input, aux[0]+k*step, fields[k], indices);
-        for(int i = 0; i < input->pos_dims; ++i){
-            input->pos_points[i] -= 2 * input->padding;
-        }
     }
     for(int i = 0; i < input->pos_dims; ++i){
         input->pos_points[i] += 2 * input->padding;
@@ -379,9 +373,6 @@ void write_sources(input_t* input, COMPLEX** sources, COMPLEX** aux, int* indice
 
     for(int k = 0; k < input->n_species; ++k){
         boundary_shift(input, sources[k], aux[0]+k*step, indices);
-        for(int i = 0; i < input->pos_dims; ++i){
-            input->pos_points[i] += 2 * input->padding;
-        }
     }
     for(int i = 0; i < input->pos_dims; ++i){
         input->pos_points[i] -= 2 * input->padding;
@@ -452,9 +443,6 @@ void write_sources(input_t* input, COMPLEX** sources, COMPLEX** aux, int* indice
 
     for(int k = 0; k < input->n_species; ++k){
         inverse_boundary_shift(input, aux[0]+k*step, sources[k], indices);
-        for(int i = 0; i < input->pos_dims; ++i){
-            input->pos_points[i] -= 2 * input->padding;
-        }
     }
     for(int i = 0; i < input->pos_dims; ++i){
         input->pos_points[i] += 2 * input->padding;

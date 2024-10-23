@@ -135,7 +135,7 @@ REAL linear_maxwell(int n, REAL* x, REAL* p){
     }
     x[0] = sqrt(x[0]);
 
-    return p[0] * exp(- x[0] / p[1]) / (sqrt(M_PI) * p[1]);
+    return p[0] * exp(- x[0] / p[1]) / (2 * pow(sqrt(M_PI) * p[1],n)*tgamma(n)/tgamma(((double)(n))/2.));
 }
 
 REAL quad_maxwell(int n, REAL* x, REAL* p){
@@ -144,7 +144,7 @@ REAL quad_maxwell(int n, REAL* x, REAL* p){
         x[0] += (x[i] - p[2+i])*(x[i] - p[2+i]);
     }
     
-    return p[0] * exp(- x[0]/2 / p[1]) / sqrt(2 * M_PI * p[1]);
+    return p[0] * exp(- x[0]/2 / p[1]) / pow(2 * M_PI * p[1], ((double)(n))/2.);
 }
 
 REAL flattened_quad_fermi(int n, REAL* x, REAL* p){
@@ -154,18 +154,7 @@ REAL flattened_quad_fermi(int n, REAL* x, REAL* p){
     }
 
     return sqrt(2*M_PI*p[1]) * gsl_sf_fermi_dirac_mhalf(-(x[0]/2 - p[0]) / p[1]);
-} // OLD VERSION WITHOUT PROPER FERMI SHIFT  
-
-/*REAL flattened_quad_fermi(int n, REAL* x, REAL* p){
-    REAL fermi_shift = x[0]*p[2];
-    x[0] = x[0]*x[0];
-    for(int i = 1; i < n; ++i){
-        x[0] += x[i]*x[i];
-        fermi_shift += x[i]*p[2+i];
-    }
-
-    return sqrt(2*M_PI*p[1]) * gsl_sf_fermi_dirac_mhalf(-(x[0]/2 - p[0] - fermi_shift) / p[1]);
-} // NEW VERSION WITH PROPER FERMI SHIFT  */
+} 
 
 REAL dirac_delta(int n, REAL* x, REAL* p){
     int check = 1;
@@ -182,4 +171,17 @@ REAL sine(int n, REAL* x, REAL* p){
         x[0] *= sin(p[2+i] * x[i]);
     }
     return p[0] + p[1] * x[0];
+}
+
+REAL anisotropic_quad_maxwell(int n, REAL* x, REAL* p){
+    x[0] = (x[0] - p[n+1])*(x[0] - p[n+1])/(2 * p[1]);
+    p[1] = sqrt(2 * M_PI * p[1]);
+    for(int i = 1; i < n; ++i){
+        x[0] += (x[i] - p[n+1+i])*(x[i] - p[n+1+i])/(2 * p[1+i]);
+        p[1] *= sqrt(2 * M_PI * p[1+i]);
+    }
+
+    
+    
+    return p[0] * exp(- x[0] ) / p[1];
 }

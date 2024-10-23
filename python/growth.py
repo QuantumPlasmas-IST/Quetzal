@@ -5,8 +5,8 @@ import h5py
 import scipy as scp
 
 #############################
-name = 'softcore1D9'
-Ktest = 11
+name = 'anomalousJ_test'
+Ktest = 0.2855993322
 fitC = -2
 fitM = 0.2
 #############################

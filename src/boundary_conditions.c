@@ -17,6 +17,12 @@ void apply_bound_cond(input_t* input, REAL** species, REAL*** left_buffer, REAL*
     }
 }
 
+void field_bound_cond(input_t* input, COMPLEX** fields, COMPLEX*** left_buffer, COMPLEX*** right_buffer, int fld){
+
+    field_cell_transfer(input, fields[fld], left_buffer, right_buffer);
+    
+}
+
 void dirichelet_bound(int total_dims, int* Ns, int dim, int padding, REAL* species){
 
     int above = 1;
@@ -86,17 +92,17 @@ void boundary_shift(input_t* input, COMPLEX* start, COMPLEX* final, int* aux){
         }
     }
 
-    for(int i = 0; i < input->pos_dims; ++i){
-        input->pos_points[i] -= 2 * input->padding;
-    }
+    //for(int i = 0; i < input->pos_dims; ++i){
+    //    input->pos_points[i] -= 2 * input->padding;
+    //}
 
 }
 
 void inverse_boundary_shift(input_t* input, COMPLEX* start, COMPLEX* final, int* aux){
 
-    for(int i = 0; i < input->pos_dims; ++i){
-        input->pos_points[i] += 2 * input->padding;
-    }
+    //for(int i = 0; i < input->pos_dims; ++i){
+    //    input->pos_points[i] += 2 * input->padding;
+    //}
 
     int count = 0;
     int inside = 0;
