@@ -5,8 +5,8 @@ import h5py
 import scipy as scp
 
 #############################
-name = 'anomalousJ_test'
-Ktest = 0.2855993322
+name = 'weibel5'
+Ktest = 4
 fitC = -2
 fitM = 0.2
 #############################
@@ -26,7 +26,7 @@ pos_max = file.attrs['Position Max.']
 mom_min = file.attrs['Momentum Min.']
 mom_max = file.attrs['Momentum Max.']
 #Nt = file.attrs['Number of Timesteps']//100
-Nt = 2000
+Nt = 3000
 diag_f = file.attrs['Diagnostic Frequency']
 pos_num = file.attrs['Number of Position Points'][0]
 mom_num = file.attrs['Number of Momentum Points'][0]
@@ -61,7 +61,7 @@ print(nk*dk)
 
 for i in range(n_figs):
 
-    phi = file['/Fields'+str(i*diag_f)][0]['real']
+    phi = file['/Fields'+str(i*diag_f)][1]['real']
     charge = file['/Sources'+str(i*diag_f)]
     rho = charge[0]['real']#-charge[1]['real']
 

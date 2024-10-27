@@ -6,15 +6,10 @@ import scipy as scp
 from matplotlib.image import imread
 from matplotlib.colors import LinearSegmentedColormap
 
-img = imread('../Pictures/Screenshots/colormap.png')
-print(img.shape)
-colors_from_img = img[::-1, 0, :]
-my_cmap = LinearSegmentedColormap.from_list('my_cmap', colors_from_img, N=878)
-
 #############################
-name = 'dispersion_2DFermiLinearA'
-iter = 200
-supress = -1
+name = 'weibel_vac'
+iter = 5
+supress = 1
 mode = 's' # s for sum; c for cut
 plane = 10
 #############################
@@ -24,7 +19,7 @@ plt.rcParams['text.usetex'] = True
 plt.rcParams.update({'font.size': 15})
 
 # Set the scaling for the potential and charge density plots
-scale = 1/5
+scale = 1
 
 def func1(x):
     return x/scale
@@ -35,11 +30,11 @@ def func2(x):
 file=h5py.File('./output/'+name+'.h5','r')
 
 electrons = file['/Species'+str(iter)][0]
-holes = file['/Species'+str(iter)][1]
-potential = file['/Fields'+str(iter)][0]['real']
+#holes = file['/Species'+str(iter)][1]
+potential = file['/Fields'+str(iter)][1]['real']
 pot_im = file['/Fields'+str(iter)][0]['imaginary']
-charge = -file['/Sources'+str(iter)][0]['real']+file['/Sources'+str(iter)][1]['real']
-charge_im = -file['/Sources'+str(iter)][0]['imaginary']+file['/Sources'+str(iter)][1]['imaginary']
+charge = file['/Sources'+str(iter)][0]['real']
+charge_im = file['/Sources'+str(iter)][0]['imaginary']
 
 species_l = electrons
 
@@ -72,13 +67,13 @@ print(np.shape(charge))
 if(supress == -1):
     sc = plt.imshow(species.T, extent = (mins[0]-2*dl[0], maxs[0]+dl[0], mins[1]-2*dl[1],maxs[1]+dl[1]), aspect='auto', origin = 'lower', cmap=my_cmap ,vmin=-np.amax(np.abs(species))*0.8,vmax=np.amax(np.abs(species))*0.8)
     #sc = plt.imshow(charge.T, extent = (mins[0], maxs[0], mins[1],maxs[1]), aspect='auto', origin = 'lower', cmap='RdBu' ,vmin=-np.amax(np.abs(charge))*0.8,vmax=np.amax(np.abs(charge))*0.8)
-    #plt.scatter(np.linspace(pos_min[0],pos_max[0],pos_num[0]), scale*potential, c='r', s=0.2)
+    plt.plot(np.linspace(pos_min[0],pos_max[0],pos_num[0]), scale*potential, c='r')
     #secay = axs.secondary_yaxis('right', functions=(func1, func2))
 if(supress == 0):
     sc = plt.imshow(species.T, extent = (mins[1]-2*dl[1], maxs[1]+dl[1], mins[2]-2*dl[2],maxs[2]+dl[2]), aspect='auto', origin = 'lower', cmap='RdBu',vmin=-np.amax(np.abs(species)),vmax=np.amax(np.abs(species)))
 if(supress == 1):
-    sc = plt.imshow(species.T, extent = (mins[0]-2*dl[0], maxs[0]+dl[0], mins[2]-2*dl[2],maxs[2]+dl[2]), aspect='auto', origin = 'lower', cmap='RdBu',vmin=-np.amax(np.abs(species)),vmax=np.amax(np.abs(species)))
-    #plt.scatter(np.linspace(pos_min[0],pos_max[0],pos_num[0]), scale*potential, c='r', s=0.2)
+    sc = plt.imshow(species.T, extent = (mins[0], maxs[0], mins[2], maxs[2]), aspect='auto', origin = 'lower', cmap='RdBu',vmin=-np.amax(np.abs(species)),vmax=np.amax(np.abs(species)))
+    plt.plot(np.linspace(pos_min[0],pos_max[0],pos_num[0]), scale*potential, c='r')
     secay = axs.secondary_yaxis('right', functions=(func1, func2))
 
 #plt.tight_layout()
@@ -87,4 +82,4 @@ plt.ylabel(r"$y$ [$l_0$]")
 plt.title(r"$t = $ "+str(iter*dt)+r" $t_0$") 
 plt.colorbar(sc, extend = 'both')
 #plt.gca().set_aspect('equal')
-plt.savefig("./img/"+name+"_"+str(iter)+".png", dpi=100)
+plt.savefig("./img/"+name+"_"+str(iter)+".png", dpi=500)

@@ -281,9 +281,6 @@ void write_fields(input_t* input, COMPLEX** fields, COMPLEX** aux, int* indices,
     for(int k = 0; k < input->n_fields; ++k){
         boundary_shift(input, fields[k], aux[0]+k*step, indices);
     }
-    for(int i = 0; i < input->pos_dims; ++i){
-        input->pos_points[i] -= 2 * input->padding;
-    }
 
     // Create complex IO datatype
     hid_t complex_id = H5Tcreate (H5T_COMPOUND, sizeof (hdf5_complex_t));
@@ -311,7 +308,7 @@ void write_fields(input_t* input, COMPLEX** fields, COMPLEX** aux, int* indices,
     block[0] = input->n_fields;
 
     for(int i = 0; i < input->pos_dims; ++i){
-        block[1+i] = input->pos_points[i];
+        block[1+i] = input->fft_points[i];
         offset[1+i] = input->parallel_pos[i] * block[1+i];
         stride[1+i] = 1;
         count[1+i] = 1;
@@ -347,13 +344,6 @@ void write_fields(input_t* input, COMPLEX** fields, COMPLEX** aux, int* indices,
     status = H5Pclose(fapl_id);
     status = H5Pclose(xf_id);
     status = H5Fclose(file_id);
-
-    for(int k = 0; k < input->n_fields; ++k){
-        inverse_boundary_shift(input, aux[0]+k*step, fields[k], indices);
-    }
-    for(int i = 0; i < input->pos_dims; ++i){
-        input->pos_points[i] += 2 * input->padding;
-    }
 
     MPI_Barrier(MPI_COMM_WORLD);
     
