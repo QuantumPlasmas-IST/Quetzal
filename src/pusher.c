@@ -287,6 +287,10 @@ void convolve_source(input_t* input, COMPLEX** sources, COMPLEX** fields_fft, CO
         // Calculate wavevectors
         axis_index(input->pos_dims, input->fft_points, aux_is, ps);
 
+        for(int dim = 0; dim < input->pos_dims+input->mom_dims; ++dim){
+            aux_wavevector[dim] = 0;
+        }
+
         for(int pdim = 0; pdim < input->pos_dims; ++pdim){
 
             aux_is[pdim] += input->parallel_pos[pdim] * input->fft_points[pdim];
@@ -601,6 +605,10 @@ void rungeKutta2(input_t* input, REAL** species, REAL** species_aux, COMPLEX** s
         if(!strcmp(input->field_type[fld],"dynamic")){
             convolve_source(input, sources, fields_fft, fields_deriv, aux_is, aux_momentum, fld);
             transform_field(input, fields, fields_fft, aux_is, fld);
+        }
+    }
+    for(int fld = 0; fld < input->n_fields; ++fld){
+        if(!strcmp(input->field_type[fld],"dynamic")){
             field_dynamics(input, fields, fields_deriv, aux_is, aux_momentum, fld);
         }
     }
@@ -646,7 +654,11 @@ void rungeKutta2(input_t* input, REAL** species, REAL** species_aux, COMPLEX** s
         if(!strcmp(input->field_type[fld],"dynamic")){
             convolve_source(input, sources, fields_fft, fields_deriv, aux_is, aux_momentum, fld);
             transform_field(input, fields_aux, fields_fft, aux_is, fld);
-            //field_dynamics(input, fields_aux, fields_deriv, aux_is, aux_momentum, fld);
+        }
+    }
+    for(int fld = 0; fld < input->n_fields; ++fld){
+        if(!strcmp(input->field_type[fld],"dynamic")){
+            field_dynamics(input, fields_aux, fields_deriv, aux_is, aux_momentum, fld);
         }
     }
     for(int fld = 0; fld < input->n_fields; ++fld){
@@ -682,8 +694,7 @@ void rungeKutta2(input_t* input, REAL** species, REAL** species_aux, COMPLEX** s
     for(int fld = 0; fld < input->n_fields; ++fld){
         if(!strcmp(input->field_type[fld],"dynamic")){
             for(int j = 0; j < input->pos_total; ++j){
-                //fields[fld][j] = 0.5*(fields[fld][j] + fields_aux[fld][j]);
-                fields[fld][j] = fields_aux[fld][j];
+                fields[fld][j] = 0.5*(fields[fld][j] + fields_aux[fld][j]);
             }
             field_bound_cond(input, fields, left_field_buffer, right_field_buffer, fld);
         }

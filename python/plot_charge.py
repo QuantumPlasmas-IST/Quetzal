@@ -65,31 +65,32 @@ point=pos_num//2
 
 num=1024
 ps = np.linspace(-55,55,num,endpoint=False)
-Ey = scp.fft.ifft(scp.fft.fft(0.01*np.sin(0.57119866 * ps)))
-Bz = scp.fft.ifft(scp.fft.fft(0*ps))
+Ey0 = scp.fft.ifft(scp.fft.fft(np.exp(-ps*ps/0.05)))
+Bz0 = scp.fft.ifft(scp.fft.fft(0.00*np.sin(0.57119866 * ps)))
 qs = 2*np.pi*scp.fft.fftfreq(num, 110./num)
 I = 1j
 dt = 0.1
+fEy = np.copy(scp.fft.fft(Ey0))
+fBz = np.copy(scp.fft.fft(Bz0))
 
 for i in range(iter):
     # 1
-    fEy = scp.fft.fft(Ey)
-    fBz = scp.fft.fft(Bz)
-    Bz1 = scp.fft.ifft(fBz - dt*I*qs*fEy)
-    Ey1 = scp.fft.ifft(fEy - dt*I*qs*fBz)
+    fBz1 = np.copy(fBz - dt*I*qs*fEy)
+    fEy1 = np.copy(fEy - dt*I*qs*fBz)
 
     # 2
-    fEy1 = scp.fft.fft(Ey1)
-    fBz1 = scp.fft.fft(Bz1)
-    Bz2 = scp.fft.ifft(fBz1 - dt*I*qs*fEy1)
-    Ey2 = scp.fft.ifft(fEy1 - dt*I*qs*fBz1)
+    fBz2 = np.copy(fBz1 - dt*I*qs*fEy1)
+    fEy2 = np.copy(fEy1 - dt*I*qs*fBz1)
 
     # Av
-    Ey3 = (Ey + Ey2)/2
-    Bz3 = (Bz + Bz2)/2
+    fEy3 = np.copy((fEy + fEy2)/2.)
+    fBz3 = np.copy((fBz + fBz2)/2.)
 
-    Ey = np.copy(Ey3)
-    Bz = np.copy(Bz3)
+    fEy = np.copy(fEy3)
+    fBz = np.copy(fBz3)
+
+Bz = np.copy(scp.fft.ifft(fBz))
+Ey = np.copy(scp.fft.ifft(fEy))
 
 plt.plot(ps, Ey, c='r')
 plt.plot(ps, Bz, c='b')
@@ -99,30 +100,18 @@ plt.tight_layout()
 plt.savefig("./img/"+name+"_charge_"+str(iter)+"_theo.png", dpi=500)
 plt.close()
 
-plt.plot(scp.fft.fftshift(qs), np.abs(scp.fft.fftshift(scp.fft.fft(potential)-scp.fft.fft(Ey1))), c='r')
+plt.scatter(scp.fft.fftshift(qs), np.real(scp.fft.fftshift(fEy)), c='r', s=1)
+plt.scatter(scp.fft.fftshift(qs), np.imag(scp.fft.fftshift(fEy)), c='b', s=1)
 plt.xlabel(r"$x$ [$c \omega_{pe}^{-1}$]")
 plt.title(r"$t = $ "+str(iter*dt)+r" $\omega_{pe}^{-1}$") 
 plt.tight_layout()
 plt.savefig("./img/"+name+"_charge_"+str(iter)+"_fftE.png", dpi=500)
 plt.close()
 
-plt.plot(scp.fft.fftshift(qs), np.abs(scp.fft.fftshift(scp.fft.fft(potential2)-scp.fft.fft(Bz1))), c='r')
+plt.scatter(scp.fft.fftshift(qs), np.real(scp.fft.fftshift(fBz)), c='r', s=1)
+plt.scatter(scp.fft.fftshift(qs), np.imag(scp.fft.fftshift(fBz)), c='b', s=1)
 plt.xlabel(r"$x$ [$c \omega_{pe}^{-1}$]")
 plt.title(r"$t = $ "+str(iter*dt)+r" $\omega_{pe}^{-1}$") 
 plt.tight_layout()
 plt.savefig("./img/"+name+"_charge_"+str(iter)+"_fftB.png", dpi=500)
-plt.close()
-
-plt.scatter(ps, np.real(Ey1-(potential+I*pot_im)), c='r', s=1)
-plt.xlabel(r"$x$ [$c \omega_{pe}^{-1}$]")
-plt.title(r"$t = $ "+str(iter*dt)+r" $\omega_{pe}^{-1}$") 
-plt.tight_layout()
-plt.savefig("./img/"+name+"_charge_"+str(iter)+"_test.png", dpi=500)
-plt.close()
-
-plt.scatter(ps, np.imag(Ey1-(potential+I*pot_im)), c='r', s=1)
-plt.xlabel(r"$x$ [$c \omega_{pe}^{-1}$]")
-plt.title(r"$t = $ "+str(iter*dt)+r" $\omega_{pe}^{-1}$") 
-plt.tight_layout()
-plt.savefig("./img/"+name+"_charge_"+str(iter)+"_test2.png", dpi=500)
 plt.close()

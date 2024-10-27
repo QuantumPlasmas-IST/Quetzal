@@ -22,7 +22,7 @@ void field_bound_cond(input_t* input, COMPLEX** fields, COMPLEX*** left_buffer, 
     field_cell_transfer(input, fields[fld], left_buffer, right_buffer);
 
     for (int ps = 0; ps < input->pos_total; ++ps){
-        fields[fld][ps] = creal(fields[fld][ps]);
+        //fields[fld][ps] = creal(fields[fld][ps]);
     }
     
 }

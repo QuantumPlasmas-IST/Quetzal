@@ -7,7 +7,7 @@ import scipy.optimize as opt
 import mpmath as mpm
 
 #############################
-name = 'weibel_iso'
+name = 'weibel_vac'
 T = 0.00005
 u = 0.05
 wpe = np.sqrt(2)
@@ -31,7 +31,8 @@ pos_min = file.attrs['Position Min.']
 pos_max = file.attrs['Position Max.']
 mom_min = file.attrs['Momentum Min.']
 mom_max = file.attrs['Momentum Max.']
-Nt = file.attrs['Number of Timesteps']//3
+Nt = file.attrs['Number of Timesteps']
+Nt = 100
 diag_f = file.attrs['Diagnostic Frequency']
 pos_num = file.attrs['Number of Position Points'][0]
 mom_num = file.attrs['Number of Momentum Points'][0]
@@ -60,7 +61,7 @@ rho = np.zeros((n_figs,pos_num-2*padding))
 
 for i in range(n_figs):
 
-    potential = file['/Fields'+str((i+1)*diag_f)][2]['real']
+    potential = file['/Fields'+str((i+1)*diag_f)][1]['real']
     charge1 = file['/Sources'+str((i+1)*diag_f)][0]['real']
     #charge2 = file['/Sources'+str((i+1)*diag_f)][1]['real']
 
@@ -99,8 +100,8 @@ sc = plt.imshow(np.log10(Sphi+1e-5), extent = (-kmax/2-dk/2,kmax/2-dk/2,-wmax/2-
 #plt.plot(qs, np.sqrt(wpe**2 + 3 * T * qs**2), c = 'r') # 3D quadratic
 #plt.plot(qs, np.sqrt(ge * alpha * qs + 3*beta/alpha * qs**2), c = 'r')     # 2D quadratic
 #plt.plot(qs, np.sqrt(ge * alpha / 2 * qs + 3/4 * qs**2), c = 'r')    # 2D linear
-plt.xlim((-10,10))
-plt.ylim((0,6))
+#plt.xlim((-10,10))
+#plt.ylim((0,6))
 plt.xlabel(r"$k_x$[$\omega_{pe} c^{-1}$]")
 plt.ylabel(r"$\omega$[$\omega_{pe}$]")
 plt.colorbar(sc)
