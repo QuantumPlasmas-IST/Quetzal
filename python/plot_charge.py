@@ -5,8 +5,8 @@ import h5py
 import scipy as scp
 
 #############################
-name = 'weibel_vac'
-iter = 1
+name = 'weibel4'
+iter = 150000
 #############################
 
 # Allows the use of LateX notation in labels
@@ -29,8 +29,8 @@ pot_im = file['/Fields'+str(iter)][1]['imaginary']
 potential2 = file['/Fields'+str(iter)][2]['real']
 pot_im2 = file['/Fields'+str(iter)][2]['imaginary']
 
-#charge = file['/Sources'+str(iter)][0]['real']
-#charge_im = file['/Sources'+str(iter)][0]['imaginary']
+charge = file['/Sources'+str(iter)][0]['real']
+charge_im = file['/Sources'+str(iter)][0]['imaginary']
 
 pos_min = file.attrs['Position Min.'][0]
 pos_max = file.attrs['Position Max.'][0]
@@ -62,7 +62,7 @@ point = int((2*pos_num)//5)
 point=pos_num//2
 #print(-charge[point])
 #print((potential[point+1]-2*potential[point]+potential[point-1])/dx**2)
-
+"""
 num=1024
 ps = np.linspace(-55,55,num,endpoint=False)
 Ey0 = scp.fft.ifft(scp.fft.fft(np.exp(-ps*ps/0.05)))
@@ -115,3 +115,24 @@ plt.title(r"$t = $ "+str(iter*dt)+r" $\omega_{pe}^{-1}$")
 plt.tight_layout()
 plt.savefig("./img/"+name+"_charge_"+str(iter)+"_fftB.png", dpi=500)
 plt.close()
+
+dt=0.01
+size = 300
+testE = np.zeros(size+1, dtype=np.complex128)
+testB = np.zeros(size+1, dtype=np.complex128)
+testE2 = np.zeros(size+1, dtype=np.complex128)
+testB2 = np.zeros(size+1, dtype=np.complex128)
+testE[0] = 1
+for i in range(size):
+    testB2[i] = testB[i] - dt*30*testE[i]
+    testE2[i] = testE[i] + dt*30*testB[i]
+    testB2[i+1] = testB2[i] - dt*30*testE2[i]
+    testE2[i+1] = testE2[i] + dt*30*testB2[i]
+    testB[i+1] = (testB[i] + testB2[i+1])/2
+    testE[i+1] = (testE[i] + testE2[i+1])/2
+
+
+print(testE[size],testB[size],np.sqrt(testB[size]**2+testE[size]**2))
+
+
+"""

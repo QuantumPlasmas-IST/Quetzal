@@ -7,9 +7,9 @@ from matplotlib.image import imread
 from matplotlib.colors import LinearSegmentedColormap
 
 #############################
-name = 'weibel_vac'
-iter = 5
-supress = 1
+name = 'weibel3'
+iter = 8000
+supress = 0
 mode = 's' # s for sum; c for cut
 plane = 10
 #############################
