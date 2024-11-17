@@ -7,8 +7,8 @@ import scipy.optimize as opt
 import mpmath as mpm
 
 #############################
-name = 'dispersion_2DFermiLinear4'
-T = 0.05
+name = 'weibel4'
+T = 0.00005
 u = 0.05
 wpe = np.sqrt(2)
 ge = np.pi
@@ -60,12 +60,12 @@ rho = np.zeros((n_figs,pos_num-2*padding))
 
 for i in range(n_figs):
 
-    potential = file['/Fields'+str((i+1)*diag_f)][0]['real']
+    potential = file['/Fields'+str((i+1)*diag_f)][2]['real']
     charge1 = file['/Sources'+str((i+1)*diag_f)][0]['real']
-    charge2 = file['/Sources'+str((i+1)*diag_f)][1]['real']
+    #charge2 = file['/Sources'+str((i+1)*diag_f)][1]['real']
 
     phi[i,:] = potential[padding:-padding]
-    rho[i,:] = charge1[padding:-padding]-charge2[padding:-padding]
+    rho[i,:] = charge1[padding:-padding]#-charge2[padding:-padding]
     #rho[i,:] = charge1[padding:-padding]
 
     #print(np.average(phi[i,:]))
@@ -82,9 +82,9 @@ beta = (T**2) * ((np.pi**2)/6 + (u/T)**2 / 2)
 qs = np.linspace(0,50,1000)
 
 sc = plt.imshow(np.log10(Srho+1e-5), extent = (-kmax/2-dk/2,kmax/2-dk/2,-wmax/2-dw/2,wmax/2-dw/2), aspect='auto', origin = 'lower')
-#plt.plot(qs, np.sqrt(wpe**2 + 3 * T * qs**2), c = 'r') # 3D quadratic
+plt.plot(qs, np.sqrt(1 * qs + 3 * T * qs**2), c = 'r') # 3D quadratic
 #plt.plot(qs, np.sqrt(ge * alpha * qs + 3*beta/alpha * qs**2), c = 'r')     # 2D quadratic
-plt.plot(qs, np.sqrt(ge * alpha / 2 * qs + 3/4 * qs**2), c = 'r')    # 2D linear
+#plt.plot(qs, np.sqrt(ge * alpha / 2 * qs + 3/4 * qs**2), c = 'r')    # 2D linear
 plt.xlim((-10,10))
 plt.ylim((0,6))
 #plt.clim((-10,7))
@@ -95,12 +95,14 @@ plt.tight_layout()
 plt.savefig("./img/"+name+"_chargeFFT.png", dpi=200)
 plt.close()
 
-sc = plt.imshow(np.log10(Sphi+1e-5), extent = (-kmax/2-dk/2,kmax/2-dk/2,-wmax/2-dw/2,wmax/2-dw/2), aspect='auto', origin = 'lower')
-#plt.plot(qs, np.sqrt(wpe**2 + 3 * T * qs**2), c = 'r') # 3D quadratic
+print(wmax,dw)
+
+sc = plt.imshow(np.log10(Sphi+1e-5), extent = (-kmax/2-dk/2,kmax/2-dk/2,-wmax/2,wmax/2), aspect='auto', origin = 'lower')
+plt.plot(qs, np.sqrt(qs/2 + qs**2), c = 'r') # 3D quadratic
 #plt.plot(qs, np.sqrt(ge * alpha * qs + 3*beta/alpha * qs**2), c = 'r')     # 2D quadratic
-plt.plot(qs, np.sqrt(ge * alpha / 2 * qs + 3/4 * qs**2), c = 'r')    # 2D linear
-plt.xlim((-10,10))
-plt.ylim((0,6))
+#plt.plot(qs, np.sqrt(ge * alpha / 2 * qs + 3/4 * qs**2), c = 'r')    # 2D linear
+plt.xlim((-kmax/2,kmax/2))
+plt.ylim((-wmax/20,wmax/2))
 plt.xlabel(r"$k_x$[$\omega_{pe} c^{-1}$]")
 plt.ylabel(r"$\omega$[$\omega_{pe}$]")
 plt.colorbar(sc)
@@ -108,7 +110,7 @@ plt.tight_layout()
 plt.savefig("./img/"+name+"_fieldFFT.png", dpi=200)
 plt.close()
 
-kays = np.linspace(0,kmax/2,(pos_num-4)//2)
+"""kays = np.linspace(0,kmax/2,(pos_num-4)//2)
 
 omega = np.argmax(Srho[n_figs//2: , (pos_num-4)//2:], axis = 0) * dw
 
@@ -161,9 +163,9 @@ print(params[1])
 print()
 print(alpha)
 print(beta)
-
-Drho = np.abs(scp.fft.fftshift(scp.fft.fft(rho,axis=-1),axes=-1))
-Dphi = np.abs(scp.fft.fftshift(scp.fft.fft(phi,axis=-1),axes=-1))
+"""
+Drho = np.abs(scp.fft.fftshift(scp.fft.fft(rho,axis=-1),axes=-1))**2
+Dphi = np.abs(scp.fft.fftshift(scp.fft.fft(phi,axis=-1),axes=-1))**2
 
 sc = plt.imshow(np.log(Drho+1e-5), extent = (-kmax/2-dk/2,kmax/2-dk/2,0,Nt*dt), aspect='auto', origin = 'lower')
 plt.xlim((-10,10))
@@ -176,7 +178,7 @@ plt.savefig("./img/"+name+"_chargeDamp.png", dpi=200)
 plt.close()
 
 sc = plt.imshow(np.log(Dphi+1e-5), extent = (-kmax/2-dk/2,kmax/2-dk/2,0,Nt*dt), aspect='auto', origin = 'lower')
-plt.xlim((-10,10))
+plt.xlim((-4,4))
 #plt.ylim((0,6))
 plt.xlabel(r"$k_x$[$\omega_{pe} c^{-1}$]")
 plt.ylabel(r"$t$[$\omega_{pe}^{-1}$]")
@@ -185,6 +187,7 @@ plt.tight_layout()
 plt.savefig("./img/"+name+"_fieldDamp.png", dpi=200)
 plt.close()
 
+"""
 times = np.linspace(Dt,Nt*dt,n_figs, endpoint=True)
 
 def fermi_dirac_derivative(func_p, func_u, func_T):
@@ -235,10 +238,10 @@ for it in range(30):
     time_min = times[cond_min]
     time_max = times[cond_max]
 
-    """if(slic<0):
+    if(slic<0):
         params, covs = opt.curve_fit(line, times[1:cond_max], signal_filtered[1:cond_max])
     else:
-        params, covs = opt.curve_fit(line, times[cond_min:cond_max], signal_filtered[cond_min:cond_max])"""
+        params, covs = opt.curve_fit(line, times[cond_min:cond_max], signal_filtered[cond_min:cond_max])
     
     if(slic<5):
         params, covs = opt.curve_fit(line, times[1:cond_max], signal_filtered[1:cond_max])
@@ -290,3 +293,4 @@ plt.ylabel(r"$-\gamma\cdot t_0$")
 plt.tight_layout()
 plt.savefig("./img/"+name+"_landau.png", dpi=200)
 plt.close()
+"""

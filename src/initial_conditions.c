@@ -175,11 +175,11 @@ REAL sine(int n, REAL* x, REAL* p){
 
 REAL anisotropic_quad_maxwell(int n, REAL* x, REAL* p){
     x[0] = (x[0] - p[n+1])*(x[0] - p[n+1])/(2 * p[1]);
-    p[1] = sqrt(2 * M_PI * p[1]);
+    REAL norm = sqrt(2 * M_PI * p[1]);
     for(int i = 1; i < n; ++i){
         x[0] += (x[i] - p[n+1+i])*(x[i] - p[n+1+i])/(2 * p[1+i]);
-        p[1] *= sqrt(2 * M_PI * p[1+i]);
+        norm *= sqrt(2 * M_PI * p[1+i]);
     }
     
-    return p[0] * exp(- x[0] ) / p[1];
+    return p[0] * exp(- x[0] ) / norm;
 }

@@ -157,14 +157,21 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
         //Field initial conditions
         if(!strcmp(input->field_init_names[i],"gaussian")){
             input->field_inits[i]=&gaussian;
-            for (int j = 0; j < 3; ++j){
+            for (int j = 0; j < 2+input->pos_dims; ++j){
                 input->field_init_params[i][j]=field_parameters[field_param_count];
                 field_param_count++;
             }
         }
         if(!strcmp(input->field_init_names[i],"uniform")){
             input->field_inits[i]=&uniform;
-            for (int j = 0; j < 3; ++j){
+            for (int j = 0; j < 1+2*input->pos_dims; ++j){
+                input->field_init_params[i][j]=field_parameters[field_param_count];
+                field_param_count++;
+            }
+        }
+        if(!strcmp(input->field_init_names[i],"sine")){
+            input->field_inits[i]=&sine;
+            for (int j = 0; j < 2+input->pos_dims; ++j){
                 input->field_init_params[i][j]=field_parameters[field_param_count];
                 field_param_count++;
             }

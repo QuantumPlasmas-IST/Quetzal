@@ -111,7 +111,7 @@ REAL** solve(input_t* input){
     }
 
     int* is = malloc(sizeof(int) * (input->pos_dims+input->mom_dims));
-    REAL* aux_momentum = malloc(input->mom_dims * sizeof(REAL));
+    REAL* aux_momentum = malloc((input->pos_dims+input->mom_dims) * sizeof(REAL));
 
     // Applying initial and boundary conditions conditions //
 
@@ -287,6 +287,10 @@ void convolve_source(input_t* input, COMPLEX** sources, COMPLEX** fields_fft, CO
         // Calculate wavevectors
         axis_index(input->pos_dims, input->fft_points, aux_is, ps);
 
+        for(int dim = 0; dim < input->pos_dims+input->mom_dims; ++dim){
+            aux_wavevector[dim] = 0;
+        }
+
         for(int pdim = 0; pdim < input->pos_dims; ++pdim){
 
             aux_is[pdim] += input->parallel_pos[pdim] * input->fft_points[pdim];
@@ -350,6 +354,10 @@ void field_dynamics(input_t* input, COMPLEX** fields, COMPLEX** fields_deriv, in
         // Calculate wavevectors
         axis_index(input->pos_dims, input->fft_points, aux_is, ps);
 
+        for(int dim = 0; dim < input->pos_dims+input->mom_dims; ++dim){
+            aux_wavevector[dim] = 0;
+        }
+
         for(int pdim = 0; pdim < input->pos_dims; ++pdim){
 
             aux_is[pdim] += input->parallel_pos[pdim] * input->fft_points[pdim];
@@ -365,7 +373,6 @@ void field_dynamics(input_t* input, COMPLEX** fields, COMPLEX** fields_deriv, in
         // Calculate the field derivative
         fields_deriv[fld][ps] += input->dynamics[fld](fld, ps, fields, aux_wavevector);
     }
-
 }
 
 REAL central_diff(input_t* input, REAL** species, COMPLEX** fields, int i_sp, int index, int* aux_is, REAL* velocity){
@@ -580,7 +587,7 @@ void finite_volumeNL2(input_t* input, REAL** species, COMPLEX** fields, int* aux
 }
 
 void rungeKutta2(input_t* input, REAL** species, REAL** species_aux, COMPLEX** sources, COMPLEX** fields, COMPLEX** fields_aux, COMPLEX** fields_fft, COMPLEX** fields_deriv, REAL*** flows, int* aux_is, REAL* aux_momentum, REAL*** left_buffer, REAL*** right_buffer, COMPLEX*** left_field_buffer, COMPLEX*** right_field_buffer){
-    
+
     // First Step //
     integrate_source(input, species, sources, aux_is, aux_momentum);
     
@@ -598,7 +605,15 @@ void rungeKutta2(input_t* input, REAL** species, REAL** species_aux, COMPLEX** s
         if(!strcmp(input->field_type[fld],"dynamic")){
             convolve_source(input, sources, fields_fft, fields_deriv, aux_is, aux_momentum, fld);
             transform_field(input, fields, fields_fft, aux_is, fld);
+        }
+    }
+    for(int fld = 0; fld < input->n_fields; ++fld){
+        if(!strcmp(input->field_type[fld],"dynamic")){
             field_dynamics(input, fields, fields_deriv, aux_is, aux_momentum, fld);
+        }
+    }
+    for(int fld = 0; fld < input->n_fields; ++fld){
+        if(!strcmp(input->field_type[fld],"dynamic")){
             for(int j = 0; j < input->pos_total; ++j){
                 fields_aux[fld][j] = fields[fld][j] + input->deltaT * fields_deriv[fld][j];
             }
@@ -639,7 +654,15 @@ void rungeKutta2(input_t* input, REAL** species, REAL** species_aux, COMPLEX** s
         if(!strcmp(input->field_type[fld],"dynamic")){
             convolve_source(input, sources, fields_fft, fields_deriv, aux_is, aux_momentum, fld);
             transform_field(input, fields_aux, fields_fft, aux_is, fld);
+        }
+    }
+    for(int fld = 0; fld < input->n_fields; ++fld){
+        if(!strcmp(input->field_type[fld],"dynamic")){
             field_dynamics(input, fields_aux, fields_deriv, aux_is, aux_momentum, fld);
+        }
+    }
+    for(int fld = 0; fld < input->n_fields; ++fld){
+        if(!strcmp(input->field_type[fld],"dynamic")){
             for(int j = 0; j < input->pos_total; ++j){
                 fields_aux[fld][j] += input->deltaT * fields_deriv[fld][j];
             }
@@ -678,4 +701,5 @@ void rungeKutta2(input_t* input, REAL** species, REAL** species_aux, COMPLEX** s
     }
 
     apply_bound_cond(input, species, left_buffer, right_buffer);
+    
 }

@@ -20,6 +20,10 @@ void apply_bound_cond(input_t* input, REAL** species, REAL*** left_buffer, REAL*
 void field_bound_cond(input_t* input, COMPLEX** fields, COMPLEX*** left_buffer, COMPLEX*** right_buffer, int fld){
 
     field_cell_transfer(input, fields[fld], left_buffer, right_buffer);
+
+    for (int ps = 0; ps < input->pos_total; ++ps){
+        //fields[fld][ps] = creal(fields[fld][ps]);
+    }
     
 }
 
