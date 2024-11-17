@@ -180,8 +180,6 @@ REAL anisotropic_quad_maxwell(int n, REAL* x, REAL* p){
         x[0] += (x[i] - p[n+1+i])*(x[i] - p[n+1+i])/(2 * p[1+i]);
         p[1] *= sqrt(2 * M_PI * p[1+i]);
     }
-
-    
     
     return p[0] * exp(- x[0] ) / p[1];
 }
