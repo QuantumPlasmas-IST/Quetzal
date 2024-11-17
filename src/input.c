@@ -318,6 +318,20 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
                 mom_param_count++;
             }
         }
+        if(!strcmp(input->mom_init_names[i],"anisotropic quadratic fermi")){
+            input->mom_inits[i]=&anisotropic_quad_fermi;
+            for (int j = 0; j < 1+2*input->mom_dims; ++j){
+                input->mom_init_params[i][j]=mom_parameters[mom_param_count];
+                mom_param_count++;
+            }
+        }
+        if(!strcmp(input->mom_init_names[i],"anisotropic linear fermi")){
+            input->mom_inits[i]=&anisotropic_linear_fermi;
+            for (int j = 0; j < 1+2*input->mom_dims; ++j){
+                input->mom_init_params[i][j]=mom_parameters[mom_param_count];
+                mom_param_count++;
+            }
+        }
     }
 }
 
