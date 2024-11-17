@@ -97,7 +97,7 @@ REAL linear_fermi(int n, REAL* x, REAL* p){
     }
     x[0] = sqrt(x[0]);
     
-    return 1.0 / (1 + exp((x[0] - p[0]) / p[1]));
+    return 1.0 / (1 + exp((x[0] - p[0]) / p[1])) / (2*M_PI*p[1]*p[1] * gsl_sf_fermi_dirac_1(p[0] / p[1]));
 }
 
 REAL quad_fermi(int n, REAL* x, REAL* p){
@@ -106,7 +106,7 @@ REAL quad_fermi(int n, REAL* x, REAL* p){
         x[0] += (x[i] - p[2+i])*(x[i] - p[2+i]);
     }
 
-    return 1 / (1 + exp((x[0]/2 - p[0]) / p[1]));
+    return 1 / (1 + exp((x[0]/2 - p[0]) / p[1])) / (2*M_PI*p[1] * gsl_sf_fermi_dirac_0(p[0] / p[1]));
 }
 
 REAL linear_bose(int n, REAL* x, REAL* p){
@@ -153,7 +153,7 @@ REAL flattened_quad_fermi(int n, REAL* x, REAL* p){
         x[0] += (x[i] - p[2+i])*(x[i] - p[2+i]);
     }
 
-    return sqrt(2*M_PI*p[1]) * gsl_sf_fermi_dirac_mhalf(-(x[0]/2 - p[0]) / p[1]);
+    return sqrt(2*M_PI*p[1]) * gsl_sf_fermi_dirac_mhalf(-(x[0]/2 - p[0]) / p[1]) / (2*M_PI*p[1] * gsl_sf_fermi_dirac_0(p[0] / p[1]));
 } 
 
 REAL dirac_delta(int n, REAL* x, REAL* p){
@@ -182,4 +182,28 @@ REAL anisotropic_quad_maxwell(int n, REAL* x, REAL* p){
     }
     
     return p[0] * exp(- x[0] ) / norm;
+}
+
+REAL anisotropic_quad_fermi(int n, REAL* x, REAL* p){
+    x[0] = (x[0] - p[n+1])*(x[0] - p[n+1])/(2 * p[0]);
+    REAL norm = sqrt(2*M_PI*p[n] / p[0]);
+
+    for(int i = 1; i < n; ++i){
+        x[0] += (x[i] - p[n+1+i])*(x[i] - p[n+1+i])/(2 * p[i]);
+        norm *= sqrt(2*M_PI*p[n] * p[i]);
+    }
+    
+    return 1.0 / (1 + exp((x[0]-1) * p[0]/p[n])) / (norm * gsl_sf_fermi_dirac_0(p[0] / p[n]));
+}
+
+REAL anisotropic_linear_fermi(int n, REAL* x, REAL* p){ // TODO Fix vF != c //
+    x[0] = (x[0] - p[n+1])*(x[0] - p[n+1])/(p[0] * p[0]);
+    REAL norm = sqrt(2 * M_PI) * p[n] / p[0];
+    for(int i = 1; i < n; ++i){
+        x[0] += (x[i] - p[n+1+i])*(x[i] - p[n+1+i])/(p[i] * p[i]);
+        norm *= sqrt(2 * M_PI) * p[n] * p[i];
+    }
+    x[0] = sqrt(x[0]);
+    
+    return 1.0 / (1 + exp((x[0] - 1) * p[0] / p[n])) / (norm * gsl_sf_fermi_dirac_1(p[0] / p[n]));
 }
