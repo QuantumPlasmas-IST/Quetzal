@@ -5,8 +5,8 @@ import h5py
 import scipy as scp
 
 #############################
-name = 'softcore2D'
-iter = 6000
+name = 'twostream1'
+iter = 5
 #############################
 
 # Allows the use of LateX notation in labels

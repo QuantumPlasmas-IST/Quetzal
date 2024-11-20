@@ -5,8 +5,8 @@ import h5py
 import scipy as scp
 
 #############################
-name = 'weibel5'
-Ktest = 4
+name = 'weibel4'
+Ktest = 3
 fitC = -2
 fitM = 0.2
 #############################
@@ -25,8 +25,7 @@ pos_min = file.attrs['Position Min.']
 pos_max = file.attrs['Position Max.']
 mom_min = file.attrs['Momentum Min.']
 mom_max = file.attrs['Momentum Max.']
-#Nt = file.attrs['Number of Timesteps']//100
-Nt = 3000
+Nt = file.attrs['Number of Timesteps']
 diag_f = file.attrs['Diagnostic Frequency']
 pos_num = file.attrs['Number of Position Points'][0]
 mom_num = file.attrs['Number of Momentum Points'][0]
@@ -61,7 +60,7 @@ print(nk*dk)
 
 for i in range(n_figs):
 
-    phi = file['/Fields'+str(i*diag_f)][1]['real']
+    phi = file['/Fields'+str(i*diag_f)][2]['real']
     charge = file['/Sources'+str(i*diag_f)]
     rho = charge[0]['real']#-charge[1]['real']
 
@@ -99,23 +98,25 @@ def line(x,a,b):
     return a*x+b
 
 timebase2=np.linspace(0, dt*diag_f*n_figs, n_figs)
-totK = int(12//dk)
+totK = int(5//dk)
 startK = 0
 fit_Ms = np.zeros(totK)
 fit_Bs = np.zeros(totK)
-time_cond = np.logical_and(timebase2>1,timebase2<5)
+start_time=150
+end_time=250
+time_cond = np.logical_and(timebase2>start_time,timebase2<end_time)
 for k in range(totK):
-    params, covs = scp.optimize.curve_fit(line, timebase2[time_cond], np.log(np.abs(RFrho[pos_num//2+startK+k,time_cond])))
+    params, covs = scp.optimize.curve_fit(line, timebase2[time_cond], np.log(np.abs(RFphi[pos_num//2+startK+k,time_cond])))
     fit_Ms[k] = params[0]
     fit_Bs[k] = params[1]
-    if(np.min(np.abs(RFrho[pos_num//2+startK+k,1:]))<np.abs(RFrho[pos_num//2+startK+k,1])):
-        fit_Ms[k] = 0
+    #if(np.min(np.abs(RFphi[pos_num//2+startK+k,1:]))<np.abs(RFphi[pos_num//2+startK+k,1])):
+    #    fit_Ms[k] = 0
     #if(covs[0,0]>0.005):
     #    fit_Ms[k] = 0
 
-plt.plot(timebase2, np.log(np.abs(RFrho[pos_num//2+nk,:])))
+plt.plot(timebase2, np.log(np.abs(RFphi[pos_num//2+nk,:])))
 plt.plot(timebase2[time_cond], line(timebase2[time_cond],fit_Ms[nk-startK],fit_Bs[nk-startK]))
-#plt.xlim((0,15))
+plt.xlim((start_time,end_time))
 #plt.ylim((0,2))
 plt.tight_layout()
 plt.savefig("./img/"+name+"_charge_test.png", dpi=200)
@@ -162,9 +163,9 @@ qs = np.linspace(0,50,1000)
 plt.scatter(range(totK)*dk+startK*dk, fit_Ms)
 plt.plot(qs, np.sqrt(-scp.special.jv(1,qs)*qs), c = 'r')
 plt.xlim((0,12.5))
-plt.ylim((0,2))
+plt.ylim((0,0.1))
 plt.xlabel(r"$k a$")
 plt.ylabel(r"growth-rate $\gamma/\omega_{coll}$")
 plt.tight_layout()
-plt.savefig("./img/"+name+"_charge_rates.png", dpi=200)
+plt.savefig("./img/"+name+"_growth_rates.png", dpi=200)
 plt.close()

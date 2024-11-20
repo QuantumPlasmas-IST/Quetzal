@@ -47,8 +47,8 @@ dk = 2*np.pi/(pos_max[0] - pos_min[0])
 
 padding=2
 
-phi = np.zeros((n_figs,pos_num-2*padding))
-rho = np.zeros((n_figs,pos_num-2*padding))
+phi = np.zeros((n_figs,pos_num))
+rho = np.zeros((n_figs,pos_num))
 
 #print("dx = ",dx)
 #print("dt = ",dt)
@@ -64,8 +64,8 @@ for i in range(n_figs):
     charge1 = file['/Sources'+str((i+1)*diag_f)][0]['real']
     #charge2 = file['/Sources'+str((i+1)*diag_f)][1]['real']
 
-    phi[i,:] = potential[padding:-padding]
-    rho[i,:] = charge1[padding:-padding]#-charge2[padding:-padding]
+    phi[i,:] = potential
+    rho[i,:] = charge1#-charge2[padding:-padding]
     #rho[i,:] = charge1[padding:-padding]
 
     #print(np.average(phi[i,:]))
@@ -164,8 +164,8 @@ print()
 print(alpha)
 print(beta)
 """
-Drho = np.abs(scp.fft.fftshift(scp.fft.fft(rho,axis=-1),axes=-1))**2
-Dphi = np.abs(scp.fft.fftshift(scp.fft.fft(phi,axis=-1),axes=-1))**2
+Drho = np.abs(scp.fft.fftshift(scp.fft.fft(rho,axis=-1),axes=-1))
+Dphi = np.abs(scp.fft.fftshift(scp.fft.fft(phi,axis=-1),axes=-1))
 
 sc = plt.imshow(np.log(Drho+1e-5), extent = (-kmax/2-dk/2,kmax/2-dk/2,0,Nt*dt), aspect='auto', origin = 'lower')
 plt.xlim((-10,10))
@@ -179,9 +179,12 @@ plt.close()
 
 sc = plt.imshow(np.log(Dphi+1e-5), extent = (-kmax/2-dk/2,kmax/2-dk/2,0,Nt*dt), aspect='auto', origin = 'lower')
 plt.xlim((-4,4))
-#plt.ylim((0,6))
+plt.ylim((100,500))
+plt.vlines([1.1],-100,1000)
+plt.plot(np.linspace(-4,4,np.size(Dphi[int(0/Dt):int(600/Dt),int(1.1//dk)])),400+50*np.log(Dphi[int(0/Dt):int(600/Dt),pos_num//2 + int(1.1/dk)]))
 plt.xlabel(r"$k_x$[$\omega_{pe} c^{-1}$]")
 plt.ylabel(r"$t$[$\omega_{pe}^{-1}$]")
+plt.clim((-5,0))
 plt.colorbar(sc)
 plt.tight_layout()
 plt.savefig("./img/"+name+"_fieldDamp.png", dpi=200)
