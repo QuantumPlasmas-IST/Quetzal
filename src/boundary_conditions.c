@@ -269,7 +269,6 @@ void ghost_cell_transfer(input_t* input, REAL* species, REAL*** left_buffer, REA
 
             MPI_Sendrecv_replace(left_buffer[i][p], above*below, QTZ_MPI_REAL, left_proc, input->rank, right_proc, right_proc, MPI_COMM_WORLD, &Stat[2*(i*input->padding+p)]);
             MPI_Sendrecv_replace(right_buffer[i][p], above*below, QTZ_MPI_REAL, right_proc, input->rank, left_proc, left_proc, MPI_COMM_WORLD, &Stat[2*(i*input->padding+p)+1]);
-
         }
 
         //MPI_Waitall(2*input->padding, &Req[2*i*input->padding], &Stat[2*i*input->padding]);
@@ -278,8 +277,8 @@ void ghost_cell_transfer(input_t* input, REAL* species, REAL*** left_buffer, REA
             for(int j = 0; j < above; ++j){
                 for(int k = 0; k < below; ++k){
 
-                    species[(i * Nj + p) * below + k] = left_buffer[i][p][j*below + k];
-                    species[(Nj * (i + 1) - input->padding + p) * below + k] = right_buffer[i][p][j*below + k];
+                    species[(j * Nj + p) * below + k] = left_buffer[i][p][j*below + k];
+                    species[(Nj * (j + 1) - input->padding + p) * below + k] = right_buffer[i][p][j*below + k];
                 }
             }
         }
@@ -343,8 +342,8 @@ void field_cell_transfer(input_t* input, COMPLEX* field, COMPLEX*** left_buffer,
             for(int j = 0; j < above; ++j){
                 for(int k = 0; k < below; ++k){
 
-                    field[(i * Nj + p) * below + k] = left_buffer[i][p][j*below + k];
-                    field[(Nj * (i + 1) - input->padding + p) * below + k] = right_buffer[i][p][j*below + k];
+                    field[(j * Nj + p) * below + k] = left_buffer[i][p][j*below + k];
+                    field[(Nj * (j + 1) - input->padding + p) * below + k] = right_buffer[i][p][j*below + k];
                 }
             }
         }
