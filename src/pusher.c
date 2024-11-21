@@ -143,6 +143,7 @@ REAL** solve(input_t* input){
 
             if(!(i%input->mom_diag_freq)){
                 write_solution(input, species, species_aux, is, i);
+                apply_bound_cond(input, species, left_ghost_buffer, right_ghost_buffer);
             }
 
             rungeKutta2(input, species, species_aux, sources, fields, fields_aux, fields_fft, fields_deriv, flows, is, aux_momentum, left_ghost_buffer, right_ghost_buffer, left_field_buffer, right_field_buffer);
