@@ -629,8 +629,7 @@ void rungeKutta2(input_t* input, REAL** species, REAL** species_aux, COMPLEX** s
             for(int k = 1; k < input->mom_total; ++k){
                 species_aux[i][j * input->mom_total + k] = species[i][j * input->mom_total + k];
                 for(int dim = 0; dim < input->pos_dims+input->mom_dims; ++dim){
-                    //species_aux[i][j * input->mom_total + k] -= input->lambda[dim] * (flows[i][dim][j * input->mom_total + k] - flows[i][dim][j * input->mom_total + k - input->grid_factor[dim]]);
-                    species[i][j * input->mom_total + k] -= input->lambda[dim] * (flows[i][dim][j * input->mom_total + k] - flows[i][dim][j * input->mom_total + k - input->grid_factor[dim]]);
+                    species_aux[i][j * input->mom_total + k] -= input->lambda[dim] * (flows[i][dim][j * input->mom_total + k] - flows[i][dim][j * input->mom_total + k - input->grid_factor[dim]]);
                 }
             }
         }
@@ -639,7 +638,7 @@ void rungeKutta2(input_t* input, REAL** species, REAL** species_aux, COMPLEX** s
     apply_bound_cond(input, species_aux, left_buffer, right_buffer);    
 
     // Second Step //
-    /*integrate_source(input, species_aux, sources, aux_is, aux_momentum);
+    integrate_source(input, species_aux, sources, aux_is, aux_momentum);
     
     for(int fld = 0; fld < input->n_fields; ++fld){
         if(!strcmp(input->field_type[fld],"static")){
@@ -700,7 +699,7 @@ void rungeKutta2(input_t* input, REAL** species, REAL** species_aux, COMPLEX** s
             field_bound_cond(input, fields, left_field_buffer, right_field_buffer, fld);
         }
     }
-    */
+    
     apply_bound_cond(input, species, left_buffer, right_buffer);
     
 }

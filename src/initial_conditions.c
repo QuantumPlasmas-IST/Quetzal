@@ -106,6 +106,7 @@ REAL quad_fermi(int n, REAL* x, REAL* p){
         x[0] += (x[i] - p[2+i])*(x[i] - p[2+i]);
     }
 
+    if(fabs(x[0])<1e-8) printf("%f  %f\n",p[2],1 / (1 + exp((x[0]/2 - p[0]) / p[1])) / (2*M_PI*p[1] * gsl_sf_fermi_dirac_0(p[0] / p[1])));
     return 1 / (1 + exp((x[0]/2 - p[0]) / p[1])) / (2*M_PI*p[1] * gsl_sf_fermi_dirac_0(p[0] / p[1]));
 }
 

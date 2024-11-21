@@ -361,7 +361,7 @@ void write_sources(input_t* input, COMPLEX** sources, COMPLEX** aux, int* indice
         step *= input->pos_points[i] - 2 * input->padding;
     }
 
-    for(int k = 0; k < input->n_species; ++k){
+    for(int k = 0; k < input->n_species*(1+input->mom_dims); ++k){
         boundary_shift(input, sources[k], aux[0]+k*step, indices);
     }
     for(int i = 0; i < input->pos_dims; ++i){
@@ -391,7 +391,7 @@ void write_sources(input_t* input, COMPLEX** sources, COMPLEX** aux, int* indice
     offset[0] = 0;
     stride[0] = 1;
     count[0] = 1;
-    block[0] = input->n_species;
+    block[0] = input->n_species*(1+input->mom_dims);
 
     for(int i = 0; i < input->pos_dims; ++i){
         block[1+i] = input->pos_points[i];
@@ -405,7 +405,7 @@ void write_sources(input_t* input, COMPLEX** sources, COMPLEX** aux, int* indice
     sprintf(name, "/Sources%d", timestep);
 
     hsize_t dims[1+input->pos_dims];
-    dims[0] = input->n_species;
+    dims[0] = input->n_species*(1+input->mom_dims);
     for(int i = 0; i < input->pos_dims; ++i){
         dims[1+i] = input->procs[i] * block[1+i];
     }
@@ -431,7 +431,7 @@ void write_sources(input_t* input, COMPLEX** sources, COMPLEX** aux, int* indice
     status = H5Pclose(xf_id);
     status = H5Fclose(file_id);
 
-    for(int k = 0; k < input->n_species; ++k){
+    for(int k = 0; k < input->n_species*(1+input->mom_dims); ++k){
         inverse_boundary_shift(input, aux[0]+k*step, sources[k], indices);
     }
     for(int i = 0; i < input->pos_dims; ++i){
