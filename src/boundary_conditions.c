@@ -258,7 +258,7 @@ void ghost_cell_transfer(input_t* input, REAL* species, REAL*** left_buffer, REA
         for (int p = 0; p < input->padding; ++p){
             for(int j = 0; j < above; ++j){
                 for(int k = 0; k < below; ++k){
-                    left_buffer[i][p][j*below + k] = species[(Nj * (j + 1) - 2* input->padding + p) * below + k];
+                    left_buffer[i][p][j*below + k] = species[(j * Nj + input->padding + p) * below + k];;
                 }
             }
         }
@@ -284,7 +284,7 @@ void ghost_cell_transfer(input_t* input, REAL* species, REAL*** left_buffer, REA
         for (int p = 0; p < input->padding; ++p){
             for(int j = 0; j < above; ++j){
                 for(int k = 0; k < below; ++k){
-                    right_buffer[i][p][j*below + k] = species[(j * Nj + input->padding + p) * below + k];
+                    right_buffer[i][p][j*below + k] = species[(Nj * (j + 1) - 2* input->padding + p) * below + k];
                 }
             }
         }

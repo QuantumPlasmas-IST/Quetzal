@@ -253,12 +253,12 @@ void write_solution(input_t* input, REAL** results, REAL** aux, int* indices, in
     status = H5Pclose(xf_id);
     status = H5Fclose(file_id);
 
-    /*for(int k = 0; k < input->n_species; ++k){
+    for(int k = 0; k < input->n_species; ++k){
         species_inverse_boundary_shift(input, aux[0]+k*step, results[k], indices);
         for(int i = 0; i < input->pos_dims+input->mom_dims; ++i){
             input->pos_points[i] -= 2 * input->padding;
         }
-    }*/
+    }
     for(int i = 0; i < input->pos_dims+input->mom_dims; ++i){
         input->pos_points[i] += 2 * input->padding;
     }
