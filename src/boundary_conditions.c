@@ -254,54 +254,30 @@ void ghost_cell_transfer(input_t* input, REAL* species, REAL*** left_buffer, REA
             right_proc = input->rank - (input->procs[i]-1) * input->parallel_factor[i];
         }
 
-        //Fill left-facing buffer
+        //Fill buffers
         for (int p = 0; p < input->padding; ++p){
             for(int j = 0; j < above; ++j){
                 for(int k = 0; k < below; ++k){
-                    left_buffer[i][p][j*below + k] = species[(j * Nj + input->padding + p) * below + k];;
-                }
-            }
-        }
-
-        // Send left-facing data to right-facing buffer of left neighbor
-        MPI_Barrier(MPI_COMM_WORLD);
-        for (int p = 0; p < input->padding; ++p){
-            MPI_Isend(left_buffer[i][p], above*below, QTZ_MPI_REAL, left_proc, input->rank, MPI_COMM_WORLD, &Req[2*(i*input->padding+p)]);
-            MPI_Irecv(right_buffer[i][p], above*below, QTZ_MPI_REAL, right_proc, right_proc, MPI_COMM_WORLD, &Req[2*(i*input->padding+p)+1]);
-        }
-        MPI_Barrier(MPI_COMM_WORLD);
-
-        // Fill ghost-cells with right-facing buffer
-        for (int p = 0; p < input->padding; ++p){
-            for(int j = 0; j < above; ++j){
-                for(int k = 0; k < below; ++k){
-                    species[(Nj * (j + 1) - input->padding + p) * below + k] = right_buffer[i][p][j*below + k];
-                }
-            }
-        }
-
-        // Fill right-facing buffer
-        for (int p = 0; p < input->padding; ++p){
-            for(int j = 0; j < above; ++j){
-                for(int k = 0; k < below; ++k){
+                    left_buffer[i][p][j*below + k] = species[(j * Nj + input->padding + p) * below + k];
                     right_buffer[i][p][j*below + k] = species[(Nj * (j + 1) - 2* input->padding + p) * below + k];
                 }
             }
         }
-        
-        // Send right-facing data to left-facing buffer of right neighbor
+
+        // Send data to buffer of neighbors
         MPI_Barrier(MPI_COMM_WORLD);
         for (int p = 0; p < input->padding; ++p){
-            MPI_Isend(right_buffer[i][p], above*below, QTZ_MPI_REAL, right_proc, input->rank, MPI_COMM_WORLD, &Req[2*(i*input->padding+p)]);
-            MPI_Irecv(left_buffer[i][p], above*below, QTZ_MPI_REAL, left_proc, left_proc, MPI_COMM_WORLD, &Req[2*(i*input->padding+p)+1]);
+            MPI_Sendrecv_replace(left_buffer[i][p], above*below, QTZ_MPI_REAL, left_proc, input->rank, right_proc, right_proc, MPI_COMM_WORLD, &Stat[2*(i*input->padding+p)]);
+            MPI_Sendrecv_replace(right_buffer[i][p], above*below, QTZ_MPI_REAL, right_proc, input->rank, left_proc, left_proc, MPI_COMM_WORLD, &Stat[2*(i*input->padding+p)+1]);
         }
         MPI_Barrier(MPI_COMM_WORLD);
 
-        // Fill ghost-cells with left-facing buffer
+        // Fill ghost-cells with buffers
         for (int p = 0; p < input->padding; ++p){
             for(int j = 0; j < above; ++j){
                 for(int k = 0; k < below; ++k){
-                    species[(j * Nj + p) * below + k] = left_buffer[i][p][j*below + k];
+                    species[(Nj * (j + 1) - input->padding + p) * below + k] = left_buffer[i][p][j*below + k];
+                    species[(j * Nj + p) * below + k] = right_buffer[i][p][j*below + k];
                 }
             }
         }
@@ -340,57 +316,33 @@ void field_cell_transfer(input_t* input, COMPLEX* field, COMPLEX*** left_buffer,
             right_proc = input->rank - (input->procs[i]-1) * input->parallel_factor[i];
         }
 
-        //Fill left-facing buffer
+        //Fill buffers
         for (int p = 0; p < input->padding; ++p){
             for(int j = 0; j < above; ++j){
                 for(int k = 0; k < below; ++k){
-                    left_buffer[i][p][j*below + k] =  field[(j * Nj + input->padding + p) * below + k];
-                }
-            }
-        }
-
-        // Send left-facing data to right-facing buffer of left neighbor
-        MPI_Barrier(MPI_COMM_WORLD);
-        for (int p = 0; p < input->padding; ++p){
-            MPI_Isend(left_buffer[i][p], above*below, QTZ_MPI_REAL, left_proc, input->rank, MPI_COMM_WORLD, &Req[2*(i*input->padding+p)]);
-            MPI_Irecv(right_buffer[i][p], above*below, QTZ_MPI_REAL, right_proc, right_proc, MPI_COMM_WORLD, &Req[2*(i*input->padding+p)+1]);
-        }
-        MPI_Barrier(MPI_COMM_WORLD);
-
-        // Fill ghost-cells with right-facing buffer
-        for (int p = 0; p < input->padding; ++p){
-            for(int j = 0; j < above; ++j){
-                for(int k = 0; k < below; ++k){
-                    field[(Nj * (j + 1) - input->padding + p) * below + k] = right_buffer[i][p][j*below + k];
-                }
-            }
-        }
-
-        // Fill right-facing buffer
-        for (int p = 0; p < input->padding; ++p){
-            for(int j = 0; j < above; ++j){
-                for(int k = 0; k < below; ++k){
+                    left_buffer[i][p][j*below + k] = field[(j * Nj + input->padding + p) * below + k];
                     right_buffer[i][p][j*below + k] = field[(Nj * (j + 1) - 2* input->padding + p) * below + k];
                 }
             }
         }
-        
-        // Send right-facing data to left-facing buffer of right neighbor
+
+        // Send data to buffer of neighbors
         MPI_Barrier(MPI_COMM_WORLD);
         for (int p = 0; p < input->padding; ++p){
-            MPI_Isend(right_buffer[i][p], above*below, QTZ_MPI_REAL, right_proc, input->rank, MPI_COMM_WORLD, &Req[2*(i*input->padding+p)]);
-            MPI_Irecv(left_buffer[i][p], above*below, QTZ_MPI_REAL, left_proc, left_proc, MPI_COMM_WORLD, &Req[2*(i*input->padding+p)+1]);
+            MPI_Sendrecv_replace(left_buffer[i][p], above*below, QTZ_MPI_COMPLEX, left_proc, input->rank, right_proc, right_proc, MPI_COMM_WORLD, &Stat[2*(i*input->padding+p)]);
+            MPI_Sendrecv_replace(right_buffer[i][p], above*below, QTZ_MPI_COMPLEX, right_proc, input->rank, left_proc, left_proc, MPI_COMM_WORLD, &Stat[2*(i*input->padding+p)+1]);
         }
         MPI_Barrier(MPI_COMM_WORLD);
 
-        // Fill ghost-cells with left-facing buffer
+        // Fill ghost-cells with buffers
         for (int p = 0; p < input->padding; ++p){
             for(int j = 0; j < above; ++j){
                 for(int k = 0; k < below; ++k){
-                    field[(j * Nj + p) * below + k] = left_buffer[i][p][j*below + k];
+                    field[(Nj * (j + 1) - input->padding + p) * below + k] = left_buffer[i][p][j*below + k];
+                    field[(j * Nj + p) * below + k] = right_buffer[i][p][j*below + k];
                 }
             }
-        }
+        }  
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
