@@ -129,6 +129,29 @@ REAL** solve(input_t* input){
 
     // Algorithm //
 
+    /*for(int i = 0; i < input->pos_total; ++i){
+        for(int j = 0; j < input->mom_total; ++j){
+            species[0][i*input->mom_total + j] = 1000*input->rank + i;
+        }
+    }
+   int testrank=0;
+    for(int i = 0; i < input->pos_points[0]; ++i){
+        for(int j = 0; j < input->pos_points[1]; ++j){
+            if(input->rank==testrank) printf("%04.0f  ", species[0][(i*input->pos_points[1] + j)*input->mom_total+14]);
+        }
+        if(input->rank==testrank) printf("\n");
+    }
+    if(input->rank==testrank) printf("\n\n\n");
+    apply_bound_cond(input, species, left_ghost_buffer, right_ghost_buffer);
+    for(int i = 0; i < input->pos_points[0]; ++i){
+        for(int j = 0; j < input->pos_points[1]; ++j){
+            if(input->rank==testrank) printf("%04.0f  ", species[0][(i*input->pos_points[1] + j)*input->mom_total+14]);
+        }
+        if(input->rank==testrank) printf("\n");
+    }
+    if(input->rank==testrank) printf("\n\n\n");
+    return species;*/
+
     if(!strcmp(input->pusher,"runge kutta")){
         for(int i = 0; i < input->n_timesteps; ++i){
 
@@ -636,6 +659,7 @@ void rungeKutta2(input_t* input, REAL** species, REAL** species_aux, COMPLEX** s
         }
     }
 
+    //write_solution(input, species_aux, species, aux_is, -1);
     apply_bound_cond(input, species_aux, left_buffer, right_buffer);    
 
     // Second Step //

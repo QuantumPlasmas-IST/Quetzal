@@ -125,6 +125,9 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
         if(!strcmp(input->kernel_names[i],"3Dmaxwell")){
             input->kernels[i]=&maxwell_3D;
         }
+        if(!strcmp(input->kernel_names[i],"none")){
+            input->kernels[i]=&null_kernel;
+        }
 
         //Forces
         if(!strcmp(input->force_names[i],"gradient")){

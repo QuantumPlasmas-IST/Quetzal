@@ -18,4 +18,6 @@ COMPLEX maxwell_2D(int n_dims, COMPLEX density, REAL* wavevector);
 
 COMPLEX maxwell_3D(int n_dims, COMPLEX density, REAL* wavevector);
 
+COMPLEX null_kernel(int n_dims, COMPLEX density, REAL* wavevector);
+
 #endif
