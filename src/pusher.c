@@ -22,6 +22,7 @@ REAL** solve(input_t* input){
         fft2d_create(MPI_COMM_WORLD, 2, &input->fft);
         fft2d_setup(input->fft, fft_ns[1], fft_ns[0], fft_lo[1], fft_hi[1], fft_lo[0], fft_hi[0], fft_lo[1], fft_hi[1], fft_lo[0], fft_hi[0], 0, &fftsize, &sendsize, &recvsize);
         if(fftsize > input->pos_total){
+            if(!input->rank) printf("Warning: Inefficient FFT parallelization\n");
             pos_size = fftsize;
         }
     }
@@ -30,6 +31,7 @@ REAL** solve(input_t* input){
         fft3d_create(MPI_COMM_WORLD, 2, &input->fft);
         fft3d_setup(input->fft, fft_ns[2], fft_ns[1], fft_ns[0], fft_lo[2], fft_hi[2], fft_lo[1], fft_hi[1], fft_lo[0], fft_hi[0], fft_lo[2], fft_hi[2], fft_lo[1], fft_hi[1], fft_lo[0], fft_hi[0], 0, &fftsize, &sendsize, &recvsize);
         if(fftsize > input->pos_total){
+            if(!input->rank) printf("Warning: Inefficient FFT parallelization\n");
             pos_size = fftsize;
         }
     }
@@ -299,6 +301,7 @@ void convolve_source(input_t* input, COMPLEX** sources, COMPLEX** fields_fft, CO
             fastFourier(input->fft_points[0], fields_deriv[fld], fields_fft[fld],1);
             break;
         case 2:
+            //NdFourier(2, input->fft_points, fields_deriv[fld], fields_fft[fld]);
             fft2d_compute(input->fft, (double*) fields_deriv[fld], (double*) fields_fft[fld], 1);
             break;
         case 3:
@@ -343,6 +346,7 @@ void transform_field(input_t* input, COMPLEX** fields, COMPLEX** fields_fft, int
             fastFourier(input->fft_points[0], fields_fft[fld], fields[fld],1);
             break;
         case 2:
+            //NdFourier(2, input->fft_points, fields_fft[fld], fields[fld]);
             fft2d_compute(input->fft, (double*) fields_fft[fld], (double*) fields[fld], 1);
             break;
         case 3:
@@ -360,6 +364,7 @@ void invert_field(input_t* input, COMPLEX** fields, COMPLEX** fields_fft, int* a
             fastInverseFourier(input->fft_points[0], fields[fld], fields_fft[fld],1);
             break;
         case 2:
+            //NdInverseFourier(2, input->fft_points, fields[fld], fields_fft[fld]);
             fft2d_compute(input->fft, (double*) fields[fld], (double*) fields_fft[fld], -1);
             break;
         case 3:
@@ -659,7 +664,6 @@ void rungeKutta2(input_t* input, REAL** species, REAL** species_aux, COMPLEX** s
         }
     }
 
-    //write_solution(input, species_aux, species, aux_is, -1);
     apply_bound_cond(input, species_aux, left_buffer, right_buffer);    
 
     // Second Step //
