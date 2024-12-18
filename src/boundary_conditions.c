@@ -73,6 +73,52 @@ void periodic_bound(int total_dims, int* Ns, int dim, int padding, REAL* species
 
 }
 
+void forced_periodic_bound(int total_dims, int* Ns, int dim, int padding, REAL* species){
+
+    int above = 1;
+    int below = 1;
+    int Nj = Ns[dim];
+    for(int j = 0; j < dim; ++j){
+        above *= Ns[j];
+    }
+    for(int j = dim+1; j < total_dims; ++j){
+        below *= Ns[j];
+    }
+
+    for(int i = 0; i < above; ++i){
+        for(int k = 0; k < below; ++k){
+            for (int p = 0; p < padding; ++p){
+                species[(i * Nj + p) * below + k] = species[(Nj * (i + 1) - 2* padding + p) * below + k];
+                species[(Nj * (i + 1) - padding + p) * below + k] = species[(i * Nj + padding + p) * below + k];
+            }
+        }
+    }
+
+}
+
+void forced_field_periodic_bound(int total_dims, int* Ns, int dim, int padding, COMPLEX* species){
+    
+    int above = 1;
+    int below = 1;
+    int Nj = Ns[dim];
+    for(int j = 0; j < dim; ++j){
+        above *= Ns[j];
+    }
+    for(int j = dim+1; j < total_dims; ++j){
+        below *= Ns[j];
+    }
+
+    for(int i = 0; i < above; ++i){
+        for(int k = 0; k < below; ++k){
+            for (int p = 0; p < padding; ++p){
+                species[(i * Nj + p) * below + k] = species[(Nj * (i + 1) - 2* padding + p) * below + k];
+                species[(Nj * (i + 1) - padding + p) * below + k] = species[(i * Nj + padding + p) * below + k];
+            }
+        }
+    }
+
+}
+
 void boundary_shift(input_t* input, COMPLEX* start, COMPLEX* final, int* aux){
 
     int count = 0;

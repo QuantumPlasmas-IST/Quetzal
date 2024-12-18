@@ -63,3 +63,8 @@ COMPLEX maxwell_3D(int n_dims, COMPLEX density, REAL* wavevector){
     
     return -density;
 }
+
+COMPLEX null_kernel(int n_dims, COMPLEX density, REAL* wavevector){
+    
+    return 0;
+}
