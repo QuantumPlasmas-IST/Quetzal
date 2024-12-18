@@ -176,6 +176,13 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
                 field_param_count++;
             }
         }
+        if(!strcmp(input->field_init_names[i],"noise")){
+            input->field_inits[i]=&noise;
+            for (int j = 0; j < 2; ++j){
+                input->field_init_params[i][j]=field_parameters[field_param_count];
+                field_param_count++;
+            }
+        }
     }
 
     int pos_param_count=0;
