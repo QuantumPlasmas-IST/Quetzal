@@ -4,6 +4,8 @@
 
 void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters, REAL* field_parameters){
 
+    srand(time(NULL)+input->rank);
+
     int processes = 1;
     for(int i = 0; i < input->pos_dims; ++i){
         processes *= input->procs[i];
@@ -197,6 +199,9 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
         }
         if(!strcmp(input->dispersion_names[i],"quadratic")){
             input->dispersions[i]=&quadratic_dispersion;
+        }
+        if(!strcmp(input->dispersion_names[i],"anisotropic quadratic")){
+            input->dispersions[i]=&anisotropic_quadratic_dispersion;
         }
 
         // Position Initial Conditions

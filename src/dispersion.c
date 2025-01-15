@@ -16,3 +16,11 @@ void linear_dispersion(int pos_dims, int mom_dims, REAL* p){
 
 // Yes, it's supposed to do nothing
 void quadratic_dispersion(int pos_dims, int mom_dims, REAL* p){}
+
+
+// TODO add user-specified parameters to this
+void anisotropic_quadratic_dispersion(int pos_dims, int mom_dims, REAL* p){
+    
+    p[1] /= 3.;
+
+}

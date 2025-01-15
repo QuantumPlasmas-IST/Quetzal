@@ -8,4 +8,6 @@ void linear_dispersion(int pos_dims, int mom_dims, REAL* p);
 
 void quadratic_dispersion(int pos_dims, int mom_dims, REAL* p);
 
+void anisotropic_quadratic_dispersion(int pos_dims, int mom_dims, REAL* p);
+
 #endif
