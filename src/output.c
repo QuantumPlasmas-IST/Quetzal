@@ -15,7 +15,7 @@ void open_file(input_t* input){
     hsize_t str_dim[] = {STR_SIZE};
     hsize_t str_dim_pos_ndims[] = {input->pos_dims, STR_SIZE};
     hsize_t str_dim_mom_ndims[] = {input->mom_dims, STR_SIZE};
-    hsize_t str_dim_pos_params[] = {input->n_species NPARAMS, STR_SIZE};
+    hsize_t str_dim_pos_params[] = {input->n_species, NPARAMS, STR_SIZE};
     hsize_t str_dim_mom_params[] = {input->n_species, NPARAMS, STR_SIZE};
     hsize_t str_dim_fields[] = {input->n_fields, STR_SIZE};
 
