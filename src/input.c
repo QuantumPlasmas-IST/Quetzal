@@ -753,10 +753,10 @@ void print_input(input_t* input){
     for(int j = 0; j < input->mom_dims; ++j){
         printf("Number of momentum space points on axis %d = %d\n", j, input->mom_points[j]);
     }
-    for(int j = 0; j < input->pos_dims; ++j){
+    for(int j = 0; j < input->n_species; ++j){
         printf("Initial distribution of position axis %d: %s\n", j, input->pos_init_names[j]);
     }
-    for(int j = 0; j < input->mom_dims; ++j){
+    for(int j = 0; j < input->n_species; ++j){
         printf("Initial distribution of momentum axis %d: %s\n", j, input->mom_init_names[j]);
     }
     for (int i = 0; i < input->pos_dims; ++i){

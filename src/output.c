@@ -8,15 +8,15 @@ void open_file(input_t* input){
     hid_t attribute_id;
 
     hsize_t dim_pos_dims[] = {input->pos_dims};
-    hsize_t dim_pos_params[] = {input->pos_dims, NPARAMS};
+    hsize_t dim_pos_params[] = {input->n_species, NPARAMS};
     hsize_t dim_mom_dims[] = {input->mom_dims};
-    hsize_t dim_mom_params[] = {input->mom_dims, NPARAMS};
+    hsize_t dim_mom_params[] = {input->n_species, NPARAMS};
 
     hsize_t str_dim[] = {STR_SIZE};
     hsize_t str_dim_pos_ndims[] = {input->pos_dims, STR_SIZE};
     hsize_t str_dim_mom_ndims[] = {input->mom_dims, STR_SIZE};
-    hsize_t str_dim_pos_params[] = {input->pos_dims, NPARAMS, STR_SIZE};
-    hsize_t str_dim_mom_params[] = {input->mom_dims, NPARAMS, STR_SIZE};
+    hsize_t str_dim_pos_params[] = {input->n_species NPARAMS, STR_SIZE};
+    hsize_t str_dim_mom_params[] = {input->n_species, NPARAMS, STR_SIZE};
     hsize_t str_dim_fields[] = {input->n_fields, STR_SIZE};
 
     hid_t fapl_id = H5Pcreate(H5P_FILE_ACCESS);
