@@ -197,6 +197,9 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
         if(!strcmp(input->dispersion_names[i],"linear")){
             input->dispersions[i]=&linear_dispersion;
         }
+        if(!strcmp(input->dispersion_names[i],"anisotropic linear")){
+            input->dispersions[i]=&anisotropic_linear_dispersion;
+        }
         if(!strcmp(input->dispersion_names[i],"quadratic")){
             input->dispersions[i]=&quadratic_dispersion;
         }
