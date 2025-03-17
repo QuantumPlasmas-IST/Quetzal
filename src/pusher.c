@@ -131,29 +131,6 @@ REAL** solve(input_t* input){
 
     // Algorithm //
 
-    /*for(int i = 0; i < input->pos_total; ++i){
-        for(int j = 0; j < input->mom_total; ++j){
-            species[0][i*input->mom_total + j] = 1000*input->rank + i;
-        }
-    }
-   int testrank=0;
-    for(int i = 0; i < input->pos_points[0]; ++i){
-        for(int j = 0; j < input->pos_points[1]; ++j){
-            if(input->rank==testrank) printf("%04.0f  ", species[0][(i*input->pos_points[1] + j)*input->mom_total+14]);
-        }
-        if(input->rank==testrank) printf("\n");
-    }
-    if(input->rank==testrank) printf("\n\n\n");
-    apply_bound_cond(input, species, left_ghost_buffer, right_ghost_buffer);
-    for(int i = 0; i < input->pos_points[0]; ++i){
-        for(int j = 0; j < input->pos_points[1]; ++j){
-            if(input->rank==testrank) printf("%04.0f  ", species[0][(i*input->pos_points[1] + j)*input->mom_total+14]);
-        }
-        if(input->rank==testrank) printf("\n");
-    }
-    if(input->rank==testrank) printf("\n\n\n");
-    return species;*/
-
     if(!strcmp(input->pusher,"runge kutta")){
         for(int i = 0; i < input->n_timesteps; ++i){
 
@@ -336,26 +313,6 @@ void convolve_source(input_t* input, COMPLEX** sources, COMPLEX** fields_fft, CO
 
 }
 
-void transform_field(input_t* input, COMPLEX** fields, COMPLEX** fields_fft, int* aux_is, int fld){
-
-    boundary_shift(input, fields[fld], fields_fft[fld], aux_is);
-
-    switch (input->pos_dims){
-        case 1:
-            //NdFourier(input->pos_dims, input->pos_points, fields[k], sources[k]);
-            fastFourier(input->fft_points[0], fields_fft[fld], fields[fld],1);
-            break;
-        case 2:
-            //NdFourier(2, input->fft_points, fields_fft[fld], fields[fld]);
-            fft2d_compute(input->fft, (double*) fields_fft[fld], (double*) fields[fld], 1);
-            break;
-        case 3:
-            fft3d_compute(input->fft, (double*) fields_fft[fld], (double*) fields[fld], 1);
-            break;
-    }
-
-}
-
 void invert_field(input_t* input, COMPLEX** fields, COMPLEX** fields_fft, int* aux_is, int fld){
 
     switch (input->pos_dims){
@@ -374,34 +331,6 @@ void invert_field(input_t* input, COMPLEX** fields, COMPLEX** fields_fft, int* a
 
     inverse_boundary_shift(input, fields_fft[fld], fields[fld], aux_is);
 
-}
-
-void field_dynamics(input_t* input, COMPLEX** fields, COMPLEX** fields_deriv, int* aux_is, REAL* aux_wavevector, int fld){
-        
-    for(int ps = 0; ps < input->pos_total; ++ps){
-        
-        // Calculate wavevectors
-        axis_index(input->pos_dims, input->fft_points, aux_is, ps);
-
-        for(int dim = 0; dim < input->pos_dims+input->mom_dims; ++dim){
-            aux_wavevector[dim] = 0;
-        }
-
-        for(int pdim = 0; pdim < input->pos_dims; ++pdim){
-
-            aux_is[pdim] += input->parallel_pos[pdim] * input->fft_points[pdim];
-
-            if (aux_is[pdim] < (input->fft_points[pdim]*input->procs[pdim])/2){
-                aux_wavevector[pdim] = input->dk[pdim] * aux_is[pdim];
-            }
-            else{
-                aux_wavevector[pdim] = input->dk[pdim] * (-input->fft_points[pdim]*input->procs[pdim] + aux_is[pdim]);
-            }
-        }
-
-        // Calculate the field derivative
-        fields_deriv[fld][ps] += input->dynamics[fld](fld, ps, fields, aux_wavevector);
-    }
 }
 
 REAL central_diff(input_t* input, REAL** species, COMPLEX** fields, int i_sp, int index, int* aux_is, REAL* velocity){
@@ -531,86 +460,34 @@ void finite_volume2(input_t* input, REAL** species, COMPLEX** fields, int* aux_i
     }
 }
 
-void finite_volumeNL2(input_t* input, REAL** species, COMPLEX** fields, int* aux_is, REAL* aux_momentum, REAL*** flows){
+void finite_volume2_fields(input_t* input, COMPLEX** fields, COMPLEX** fields_deriv, COMPLEX** fields_fft, int fld1){
 
-    REAL cent, forw, back, delta, force;
+    COMPLEX cent, forw, back, flow;
     
-    // Loop through different species
-    for(int i = 0; i < input->n_species; ++i){
-        //Loop through different momenta
-        for(int k = 1; k < input->mom_total-2; ++k){
+    // Loop through different fields
+    for(int fld2 = 0; fld2 < input->n_fields; ++fld2){
             
-            // Calculate velocity of this momentum point
-            axis_index(input->mom_dims, input->pos_points + input->pos_dims, aux_is + input->pos_dims, k);
-            for(int mdim = 0; mdim < input->mom_dims; ++mdim){
-                aux_momentum[mdim] = input->mom_min[mdim] + aux_is[mdim+input->pos_dims] * input->mom_delta[mdim];
-            }           
-            input->dispersions[i](input->pos_dims, input->mom_dims, aux_momentum); 
+        //Loop through different axes
+        for(int pdim = 0; pdim < input->pos_dims; ++pdim){
+
+            if(input->field_matrix[pdim][fld1][fld2] == 0.) continue;
 
             //Loop through different positions
-            for(int j = 1; j < input->pos_total-2; ++j){
-                
-                for(int pdim = 0; pdim < input->pos_dims; ++pdim){
+            for(int j = input->space_factor[0]; j < input->pos_total-input->space_factor[0]; ++j){
+                                
+                cent = fields[fld2][j];
+                forw = fields[fld2][j+input->space_factor[pdim]];
+                back = fields[fld2][j-input->space_factor[pdim]];
 
-                    if(pdim == input->mom_dims){
-                        flows[i][pdim][j*input->mom_total + k] = 0;
-                        break;
-                    }
+                fields_fft[fld2][j] = 0;
+                //fields_fft[fld2][j] = (forw - cent) * MC_fluxLimiter(back, cent, forw);
+            }   
+            for(int j = input->space_factor[0]; j < input->pos_total-2*input->space_factor[0]; ++j){
 
-                    if(aux_momentum[pdim]>=0){
-                        
-                        cent = species[i][j*input->mom_total+k];
-                        forw = species[i][j*input->mom_total+k+input->grid_factor[pdim]];
-                        back = species[i][j*input->mom_total+k-input->grid_factor[pdim]];
-
-                        delta = (forw - cent) * MC_fluxLimiter(back, cent, forw);
-
-                        flows[i][pdim][j*input->mom_total + k] = aux_momentum[pdim] * (cent + (1 - aux_momentum[pdim] * input->deltaT/input->pos_delta[pdim]) * delta/2);
-                    }
-
-                    else{
-
-                        back = species[i][j*input->mom_total+k];
-                        cent = species[i][j*input->mom_total+k+input->grid_factor[pdim]];
-                        forw = species[i][j*input->mom_total+k+2*input->grid_factor[pdim]];
-
-                        delta = (forw - cent) * MC_fluxLimiter(back, cent, forw);
-
-                        flows[i][pdim][j*input->mom_total + k] = aux_momentum[pdim] * (cent - (1 - aux_momentum[pdim] * input->deltaT/input->pos_delta[pdim]) * delta/2);
-                    }
-                }   
-
-                for(int mdim = 0; mdim < input->mom_dims; ++mdim){
-
-                    force = 0;
-
-                    for(int fld = 0; fld < input->n_fields; ++fld){
-                        force += input->force_charges[i][fld] * input->forces[fld](input, fields, fld, j, k, mdim);
-                    }
-
-                    if(force>=0){
-                        
-                        cent = species[i][j*input->mom_total+k];
-                        forw = species[i][j*input->mom_total+k+input->grid_factor[input->pos_dims+mdim]];
-                        back = species[i][j*input->mom_total+k-input->grid_factor[input->pos_dims+mdim]];
-
-                        delta = (forw - cent) * MC_fluxLimiter(back, cent, forw);
-
-                        flows[i][input->pos_dims + mdim][j*input->mom_total + k] = force * (cent + (1 - force * input->deltaT/input->mom_delta[mdim]) * delta/2);
-                    }
-
-                    else{
-
-                        back = species[i][j*input->mom_total+k];
-                        cent = species[i][j*input->mom_total+k+input->grid_factor[input->pos_dims+mdim]];
-                        forw = species[i][j*input->mom_total+k+2*input->grid_factor[input->pos_dims+mdim]];
-
-                        delta = (forw - cent) * MC_fluxLimiter(back, cent, forw);
-
-                        flows[i][input->pos_dims + mdim][j*input->mom_total + k] = force * (cent - (1 - force * input->deltaT/input->mom_delta[mdim]) * delta/2);
-                    }
-                }  
-            }
+                flow = 0.5*input->field_matrix[pdim][fld1][fld2]*(fields[fld2][j]+fields[fld2][j+input->space_factor[pdim]]+fields_fft[fld2][j]/2-fields_fft[fld2][j+input->space_factor[pdim]]/2);
+                fields_deriv[fld1][j+input->space_factor[pdim]] += flow/input->pos_delta[pdim];
+                fields_deriv[fld1][j] -= flow/input->pos_delta[pdim];
+            }   
         }
     }
 }
@@ -633,12 +510,12 @@ void rungeKutta2(input_t* input, REAL** species, REAL** species_aux, COMPLEX** s
     for(int fld = 0; fld < input->n_fields; ++fld){
         if(!strcmp(input->field_type[fld],"dynamic")){
             convolve_source(input, sources, fields_fft, fields_deriv, aux_is, aux_momentum, fld);
-            transform_field(input, fields, fields_fft, aux_is, fld);
+            invert_field(input, fields_deriv, fields_fft, aux_is, fld);
         }
     }
     for(int fld = 0; fld < input->n_fields; ++fld){
         if(!strcmp(input->field_type[fld],"dynamic")){
-            field_dynamics(input, fields, fields_deriv, aux_is, aux_momentum, fld);
+            finite_volume2_fields(input, fields, fields_deriv, fields_fft, fld);
         }
     }
     for(int fld = 0; fld < input->n_fields; ++fld){
@@ -646,9 +523,7 @@ void rungeKutta2(input_t* input, REAL** species, REAL** species_aux, COMPLEX** s
             for(int j = 0; j < input->pos_total; ++j){
                 fields_aux[fld][j] = fields[fld][j] + input->deltaT * fields_deriv[fld][j];
             }
-            invert_field(input, fields, fields_fft, aux_is, fld);
             field_bound_cond(input, fields, left_field_buffer, right_field_buffer, fld);
-            invert_field(input, fields_aux, fields_fft, aux_is, fld);
             field_bound_cond(input, fields_aux, left_field_buffer, right_field_buffer, fld);
         }
     }
@@ -682,12 +557,12 @@ void rungeKutta2(input_t* input, REAL** species, REAL** species_aux, COMPLEX** s
     for(int fld = 0; fld < input->n_fields; ++fld){
         if(!strcmp(input->field_type[fld],"dynamic")){
             convolve_source(input, sources, fields_fft, fields_deriv, aux_is, aux_momentum, fld);
-            transform_field(input, fields_aux, fields_fft, aux_is, fld);
+            invert_field(input, fields_deriv, fields_fft, aux_is, fld);
         }
     }
     for(int fld = 0; fld < input->n_fields; ++fld){
         if(!strcmp(input->field_type[fld],"dynamic")){
-            field_dynamics(input, fields_aux, fields_deriv, aux_is, aux_momentum, fld);
+            finite_volume2_fields(input, fields_aux, fields_deriv, fields_fft, fld);
         }
     }
     for(int fld = 0; fld < input->n_fields; ++fld){
@@ -695,7 +570,6 @@ void rungeKutta2(input_t* input, REAL** species, REAL** species_aux, COMPLEX** s
             for(int j = 0; j < input->pos_total; ++j){
                 fields_aux[fld][j] += input->deltaT * fields_deriv[fld][j];
             }
-            invert_field(input, fields_aux, fields_fft, aux_is, fld);
             field_bound_cond(input, fields_aux, left_field_buffer, right_field_buffer, fld);
         }
     }

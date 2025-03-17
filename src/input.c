@@ -145,20 +145,6 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
             input->forces[i]=&magnetic_force;
         }
 
-        //Dynamics
-        if(!strcmp(input->dynamics_names[i],"2DmaxwellEx")){
-            input->dynamics[i]=&maxwell_2D_Ex;
-        }
-        if(!strcmp(input->dynamics_names[i],"2DmaxwellEy")){
-            input->dynamics[i]=&maxwell_2D_Ey;
-        }
-        if(!strcmp(input->dynamics_names[i],"2DmaxwellBz")){
-            input->dynamics[i]=&maxwell_2D_Bz;
-        }
-        if(!strcmp(input->dynamics_names[i],"none")){
-            input->dynamics[i]=&null_dynamics;
-        }
-
         //Field initial conditions
         if(!strcmp(input->field_init_names[i],"gaussian")){
             input->field_inits[i]=&gaussian;
@@ -351,6 +337,16 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
             }
         }
     }
+
+    for(int dim = 0; dim < input->pos_dims; ++dim){
+        for(int fld1 = 0; fld1 < input->n_fields; ++fld1){
+            for(int fld2 = 0; fld2 < input->n_fields; ++fld2){
+                printf("%f  ",input->field_matrix[dim][fld1][fld2]);
+            }
+            printf("\n");
+        }
+        printf("\n");
+    }
 }
 
 input_t* read_input(const char* name, int rank, int size){
@@ -385,8 +381,6 @@ input_t* read_input(const char* name, int rank, int size){
     input->operator = calloc(STR_SIZE, sizeof(char));
     input->kernel_names = NULL;
     input->kernels = NULL;
-    input->dynamics_names = NULL;
-    input->dynamics = NULL;
     input->force_names = NULL;
     input->forces = NULL;
     input->field_type = NULL;
@@ -410,6 +404,7 @@ input_t* read_input(const char* name, int rank, int size){
     input->force_charges = NULL;
     input->source_charges = NULL;
     input->source_moments = NULL;
+    input->field_matrix = NULL;
 
     char line[500];
 	FILE* file = fopen(name, "r");
@@ -524,12 +519,7 @@ input_t* read_input(const char* name, int rank, int size){
                     strcpy((input->kernel_names)[count], num_part);     // Character (,) pushes back new value of max to array
                     strcpy(num_part, "");
                     count++;
-                }   
-                if(!strcmp(txt_part,"DYNAMICS")){
-                    strcpy((input->dynamics_names)[count], num_part);     // Character (,) pushes back new value of max to array
-                    strcpy(num_part, "");
-                    count++;
-                }   
+                } 
                 if(!strcmp(txt_part,"FORCE")){
                     strcpy((input->force_names)[count], num_part);     // Character (,) pushes back new value of max to array
                     strcpy(num_part, "");
@@ -560,6 +550,11 @@ input_t* read_input(const char* name, int rank, int size){
                     strcpy(num_part, "");
                     count++;
                 }    
+                if(!strcmp(txt_part,"FIELD_MATRIX")){
+                    (input->field_matrix[0][0])[count] = atoi(num_part);   // Character (,) pushes back new value of min to array
+                    strcpy(num_part, "");
+                    count++;
+                }    
             }
             
 		}
@@ -585,6 +580,8 @@ input_t* read_input(const char* name, int rank, int size){
             input->procs = malloc(input->pos_dims * sizeof(int));
             input->parallel_pos = malloc(input->pos_dims * sizeof(int));
             input->parallel_factor = malloc(input->pos_dims * sizeof(int));
+
+            input->field_matrix = malloc(input->pos_dims * sizeof(REAL**));
         }
 
         if(!strcmp(txt_part,"MOM_DIMS")){
@@ -654,19 +651,16 @@ input_t* read_input(const char* name, int rank, int size){
 
             input->kernel_names = malloc(input->n_fields * sizeof(char*));
             input->force_names = malloc(input->n_fields * sizeof(char*));
-            input->dynamics_names = malloc(input->n_fields * sizeof(char*));
             input->field_type = malloc(input->n_fields * sizeof(char*));
 
             for (int i = 0; i < input->n_fields; ++i){
                 input->kernel_names[i] = calloc(STR_SIZE, sizeof(char));
                 input->force_names[i] = calloc(STR_SIZE, sizeof(char));
-                input->dynamics_names[i] = calloc(STR_SIZE, sizeof(char));
                 input->field_type[i] = calloc(STR_SIZE, sizeof(char));
             } 
 
             input->kernels = malloc((input->n_fields)*sizeof(kernel_t));
             input->forces = malloc((input->n_fields)*sizeof(force_t));
-            input->dynamics = malloc((input->n_fields)*sizeof(dynamics_t));
 
             input->force_charges[0] = malloc(input->n_species * input->n_fields * sizeof(REAL));
             for (int i = 1; i < input->n_species; ++i){
@@ -696,6 +690,16 @@ input_t* read_input(const char* name, int rank, int size){
 
 
             input->field_inits = malloc((input->n_fields)*sizeof(init_t));
+            
+            for(int dim = 0; dim < input->pos_dims; ++dim){
+                input->field_matrix[dim] = malloc(input->n_fields * sizeof(REAL*));
+            }
+            input->field_matrix[0][0] = malloc(input->pos_dims * input->n_fields * input->n_fields * sizeof(REAL));
+            for(int dim = 0; dim < input->pos_dims; ++dim){
+                for(int fld = 0; fld < input->n_fields; ++fld){
+                    input->field_matrix[dim][fld] = input->field_matrix[0][0] + fld * input->n_fields + dim * input->n_fields * input->n_fields;
+                }
+            }
 
         }
         
@@ -714,7 +718,6 @@ input_t* read_input(const char* name, int rank, int size){
         if(!strcmp(txt_part,"MOM_BOUND")) strcpy((input->mom_bound_names)[count], num_part);
         if(!strcmp(txt_part,"DISP")) strcpy(input->dispersion_names[count],num_part);
         if(!strcmp(txt_part,"KERNEL")) strcpy(input->kernel_names[count],num_part);
-        if(!strcmp(txt_part,"DYNAMICS")) strcpy(input->dynamics_names[count],num_part);
         if(!strcmp(txt_part,"FORCE")) strcpy(input->force_names[count],num_part);
         if(!strcmp(txt_part,"TYPE")) strcpy(input->field_type[count],num_part);
         if(!strcmp(txt_part,"PUSHER")) strcpy(input->pusher,num_part);
@@ -729,7 +732,8 @@ input_t* read_input(const char* name, int rank, int size){
         if(!strcmp(txt_part,"PADDING")) input->padding = atoi(num_part);
         if(!strcmp(txt_part,"FORCE_CHARGES")) input->force_charges[0][count] = atof(num_part);
         if(!strcmp(txt_part,"SOURCE_CHARGES")) input->source_charges[0][count] = atof(num_part);
-        if(!strcmp(txt_part,"SOURCE_MOMENTS")) input->source_moments[0][count] = atof(num_part);
+        if(!strcmp(txt_part,"SOURCE_MOMENTS")) input->source_moments[0][count] = atoi(num_part);
+        if(!strcmp(txt_part,"FIELD_MATRIX")) input->field_matrix[0][0][count] = atof(num_part);
 	}
 
     initialize_input(input, pos_parameters, mom_parameters, field_parameters);
@@ -814,15 +818,12 @@ void free_input(input_t* input){
         free(input->kernel_names[i]);
         free(input->force_names[i]);
         free(input->field_type[i]);
-        free(input->dynamics_names[i]);
     }
     free(input->kernel_names);
     free(input->force_names);
     free(input->field_type);
-    free(input->dynamics_names);
     free(input->kernels);
     free(input->forces);
-    free(input->dynamics);
 
     free(input->pos_inits);
     free(input->mom_inits);
@@ -855,6 +856,12 @@ void free_input(input_t* input){
     free(input->procs);
     free(input->parallel_factor);
     free(input->parallel_pos);
+
+    free(input->field_matrix[0][0]);
+    for(int dim = 0; dim < input->pos_dims; ++dim){
+        free(input->field_matrix[dim]);
+    }
+    free(input->field_matrix);
 
     free(input);
 }

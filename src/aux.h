@@ -23,8 +23,6 @@ typedef void(*bound_t)(int, int*, int, int, REAL*); //type: pointer to boundary 
 
 typedef COMPLEX(*kernel_t)(int, COMPLEX, REAL*); // type: pointer to convolution kernel function
 
-typedef COMPLEX(*dynamics_t)(int, int, COMPLEX**, REAL* ); // type: pointer to field dynamics function
-
 typedef struct input{
    
     char* filename;
@@ -64,9 +62,6 @@ typedef struct input{
     
     char** kernel_names;
     kernel_t* kernels;
-
-    char** dynamics_names;
-    dynamics_t* dynamics;
     
     char** force_names;
     REAL(**forces)(struct input*, COMPLEX**, int, int, int, int);
@@ -91,6 +86,7 @@ typedef struct input{
     REAL** source_charges;
     REAL** force_charges;
     int** source_moments;
+    REAL*** field_matrix;
 
     int padding;
 

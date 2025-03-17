@@ -9,7 +9,6 @@
 #include "stdio.h"
 #include "initial_conditions.h"
 #include "kernel.h"
-#include "dynamics.h"
 #include "boundary_conditions.h"
 #include "dispersion.h"
 #include "force.h"
