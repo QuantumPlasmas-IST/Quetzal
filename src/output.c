@@ -123,6 +123,10 @@ void open_file(input_t* input){
     status = H5Awrite(attribute_id, H5T_NATIVE_REAL, input->pos_init_params[0]);
     status = H5Aclose(attribute_id);
 
+    attribute_id = H5Acreate (file_id, "Field Initial Condition Parameters", H5T_NATIVE_REAL, pos_params_dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
+    status = H5Awrite(attribute_id, H5T_NATIVE_REAL, input->field_init_params[0]);
+    status = H5Aclose(attribute_id);
+
     attribute_id = H5Acreate (file_id, "Momentum Initial Condition Parameters", H5T_NATIVE_REAL, pos_params_dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
     status = H5Awrite(attribute_id, H5T_NATIVE_REAL, input->mom_init_params[0]);
     status = H5Aclose(attribute_id);

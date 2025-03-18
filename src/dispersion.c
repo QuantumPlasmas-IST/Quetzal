@@ -37,6 +37,6 @@ void quadratic_dispersion(int pos_dims, int mom_dims, REAL* p){}
 // TODO add user-specified parameters to this
 void anisotropic_quadratic_dispersion(int pos_dims, int mom_dims, REAL* p){
     
-    p[1] /= 5.;
+    p[1] /= 3.;
 
 }
