@@ -470,7 +470,7 @@ void finite_volume2_fields(input_t* input, COMPLEX** fields, COMPLEX** fields_de
         //Loop through different axes
         for(int pdim = 0; pdim < input->pos_dims; ++pdim){
 
-            if(input->field_matrix[pdim][fld1][fld2] == 0.) continue;
+            if(input->field_matrix[pdim][fld1][fld2] == 0. && fld1!=fld2) continue;
 
             //Loop through different positions
             for(int j = input->space_factor[0]; j < input->pos_total-input->space_factor[0]; ++j){
@@ -479,12 +479,37 @@ void finite_volume2_fields(input_t* input, COMPLEX** fields, COMPLEX** fields_de
                 forw = fields[fld2][j+input->space_factor[pdim]];
                 back = fields[fld2][j-input->space_factor[pdim]];
 
-                fields_fft[fld2][j] = 0;
-                //fields_fft[fld2][j] = (forw - cent) * MC_fluxLimiter(back, cent, forw);
+                fields_fft[fld2][j] = (forw - cent) * MC_fluxLimiter(back, cent, forw);
             }   
             for(int j = input->space_factor[0]; j < input->pos_total-2*input->space_factor[0]; ++j){
 
                 flow = 0.5*input->field_matrix[pdim][fld1][fld2]*(fields[fld2][j]+fields[fld2][j+input->space_factor[pdim]]+fields_fft[fld2][j]/2-fields_fft[fld2][j+input->space_factor[pdim]]/2);
+                if(fld1==fld2){
+                    flow += 0.5*(fields[fld2][j]-fields[fld2][j+input->space_factor[pdim]]+fields_fft[fld2][j]/2+fields_fft[fld2][j+input->space_factor[pdim]]/2);
+                }
+                fields_deriv[fld1][j+input->space_factor[pdim]] += flow/input->pos_delta[pdim];
+                fields_deriv[fld1][j] -= flow/input->pos_delta[pdim];
+            }   
+        }
+    }
+}
+
+void finite_volume1_fields(input_t* input, COMPLEX** fields, COMPLEX** fields_deriv, COMPLEX** fields_fft, int fld1){
+
+    COMPLEX flow;
+    
+    // Loop through different fields
+    for(int fld2 = 0; fld2 < input->n_fields; ++fld2){
+            
+        //Loop through different axes
+        for(int pdim = 0; pdim < input->pos_dims; ++pdim){
+
+            if(input->field_matrix[pdim][fld1][fld2] == 0.) continue;
+
+            //Loop through different positions
+            for(int j = input->space_factor[0]; j < input->pos_total-2*input->space_factor[0]; ++j){
+
+                flow = 0.5*input->field_matrix[pdim][fld1][fld2]*(fields[fld2][j]+fields[fld2][j+input->space_factor[pdim]]);
                 fields_deriv[fld1][j+input->space_factor[pdim]] += flow/input->pos_delta[pdim];
                 fields_deriv[fld1][j] -= flow/input->pos_delta[pdim];
             }   
@@ -515,7 +540,7 @@ void rungeKutta2(input_t* input, REAL** species, REAL** species_aux, COMPLEX** s
     }
     for(int fld = 0; fld < input->n_fields; ++fld){
         if(!strcmp(input->field_type[fld],"dynamic")){
-            finite_volume2_fields(input, fields, fields_deriv, fields_fft, fld);
+            finite_volume1_fields(input, fields, fields_deriv, fields_fft, fld);
         }
     }
     for(int fld = 0; fld < input->n_fields; ++fld){
@@ -562,7 +587,7 @@ void rungeKutta2(input_t* input, REAL** species, REAL** species_aux, COMPLEX** s
     }
     for(int fld = 0; fld < input->n_fields; ++fld){
         if(!strcmp(input->field_type[fld],"dynamic")){
-            finite_volume2_fields(input, fields_aux, fields_deriv, fields_fft, fld);
+            finite_volume1_fields(input, fields_aux, fields_deriv, fields_fft, fld);
         }
     }
     for(int fld = 0; fld < input->n_fields; ++fld){

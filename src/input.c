@@ -337,16 +337,6 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
             }
         }
     }
-
-    for(int dim = 0; dim < input->pos_dims; ++dim){
-        for(int fld1 = 0; fld1 < input->n_fields; ++fld1){
-            for(int fld2 = 0; fld2 < input->n_fields; ++fld2){
-                printf("%f  ",input->field_matrix[dim][fld1][fld2]);
-            }
-            printf("\n");
-        }
-        printf("\n");
-    }
 }
 
 input_t* read_input(const char* name, int rank, int size){
