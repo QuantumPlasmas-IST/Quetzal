@@ -121,8 +121,8 @@ REAL** solve(input_t* input){
     apply_init_cond(input, species_aux);
     field_init_cond(input, fields);
     if(!input->rank) printf("Initial Conditions Applied\n");
-    apply_bound_cond(input, species, left_ghost_buffer, right_ghost_buffer);
-    apply_bound_cond(input, species_aux, left_ghost_buffer, right_ghost_buffer);
+    apply_bound_cond(input, species, left_ghost_buffer, right_ghost_buffer, is);
+    apply_bound_cond(input, species_aux, left_ghost_buffer, right_ghost_buffer, is);
     for (int fld = 0; fld < input->n_fields; ++fld) field_bound_cond(input, fields, left_field_buffer, right_field_buffer, fld);
     if(!input->rank) printf("Boundary Conditions Applied\n");
     integrate_source(input, species, sources, is, aux_momentum);
@@ -145,7 +145,7 @@ REAL** solve(input_t* input){
 
             if(!(i%input->mom_diag_freq)){
                 write_solution(input, species, species_aux, is, i);
-                apply_bound_cond(input, species, left_ghost_buffer, right_ghost_buffer);
+                apply_bound_cond(input, species, left_ghost_buffer, right_ghost_buffer, is);
             }
 
             rungeKutta2(input, species, species_aux, sources, fields, fields_aux, fields_fft, fields_deriv, flows, is, aux_momentum, left_ghost_buffer, right_ghost_buffer, left_field_buffer, right_field_buffer);
@@ -564,7 +564,7 @@ void rungeKutta2(input_t* input, REAL** species, REAL** species_aux, COMPLEX** s
         }
     }
 
-    apply_bound_cond(input, species_aux, left_buffer, right_buffer);    
+    apply_bound_cond(input, species_aux, left_buffer, right_buffer, aux_is);    
 
     // Second Step //
     integrate_source(input, species_aux, sources, aux_is, aux_momentum);
@@ -609,7 +609,7 @@ void rungeKutta2(input_t* input, REAL** species, REAL** species_aux, COMPLEX** s
         }
     }
 
-    apply_bound_cond(input, species_aux, left_buffer, right_buffer);
+    apply_bound_cond(input, species_aux, left_buffer, right_buffer, aux_is);
 
     // Average Steps //
     for(int i = 0; i < input->n_species; ++i){
@@ -628,6 +628,6 @@ void rungeKutta2(input_t* input, REAL** species, REAL** species_aux, COMPLEX** s
         }
     }
     
-    apply_bound_cond(input, species, left_buffer, right_buffer);
+    apply_bound_cond(input, species, left_buffer, right_buffer, aux_is);
     
 }

@@ -1,18 +1,24 @@
 #include "boundary_conditions.h"
 
-void apply_bound_cond(input_t* input, REAL** species, REAL*** left_buffer, REAL*** right_buffer){
+void apply_bound_cond(input_t* input, REAL** species, REAL*** left_buffer, REAL*** right_buffer, int* aux_is){
     
     for (int i = 0; i < input->n_species; ++i){
 
         ghost_cell_transfer(input, species[i], left_buffer, right_buffer);
 
         for (int j = 0; j < input->pos_dims; ++j){
-            input->pos_bounds[j](input->pos_dims+input->mom_dims, input->pos_points, j, input->padding, species[i]);
+            if(input->parallel_pos[j]==0){
+                input->pos_bounds[j](input, j, aux_is, species[i],0);
+            }
+            if(input->parallel_pos[j]==input->procs[j]-1){
+                input->pos_bounds[j](input, j, aux_is, species[i],1);
+            }
         }
 
-
+        
         for (int j = 0; j < input->mom_dims; ++j){
-            input->mom_bounds[j](input->pos_dims+input->mom_dims, input->pos_points, input->pos_dims+j, input->padding, species[i]);
+            input->mom_bounds[j](input, input->pos_dims+j, aux_is, species[i], 0);
+            input->mom_bounds[j](input, input->pos_dims+j, aux_is, species[i], 1);
         }
     }
 }
@@ -27,96 +33,96 @@ void field_bound_cond(input_t* input, COMPLEX** fields, COMPLEX*** left_buffer, 
     
 }
 
-void dirichelet_bound(int total_dims, int* Ns, int dim, int padding, REAL* species){
+void dirichelet_bound(input_t* input, int dim, int* aux_is, REAL* species, int side){
 
     int above = 1;
     int below = 1;
-    int Nj = Ns[dim];
+    int Nj = input->pos_points[dim];
     for(int j = 0; j < dim; ++j){
-        above *= Ns[j];
+        above *= input->pos_points[j];
     }
-    for(int j = dim+1; j < total_dims; ++j){
-        below *= Ns[j];
+    for(int j = dim+1; j < input->pos_dims+input->mom_dims; ++j){
+        below *= input->pos_points[j];
     }
 
-    for(int i = 0; i < above; ++i){
-        for(int k = 0; k < below; ++k){
-            for (int p = 0; p < padding; ++p){
-                species[(i * Nj + p) * below + k] = 0;
-                species[(Nj * (i + 1) - p - 1) * below + k] = 0;
+    if(side){
+        for(int i = 0; i < above; ++i){
+            for(int k = 0; k < below; ++k){
+                for (int p = 0; p < input->padding; ++p){
+                    species[(Nj * (i + 1) - p - 1) * below + k] = 0;
+                }
+            }
+        }
+    }
+    else{
+        for(int i = 0; i < above; ++i){
+            for(int k = 0; k < below; ++k){
+                for (int p = 0; p < input->padding; ++p){
+                    species[(i * Nj + p) * below + k] = 0;
+                }
             }
         }
     }
 }
 
-void periodic_bound(int total_dims, int* Ns, int dim, int padding, REAL* species){
-
-
-    /*int above = 1;
-    int below = 1;
-    int Nj = Ns[dim];
-    for(int j = 0; j < dim; ++j){
-        above *= Ns[j];
-    }
-    for(int j = dim+1; j < total_dims; ++j){
-        below *= Ns[j];
-    }
-
-    for(int i = 0; i < above; ++i){
-        for(int k = 0; k < below; ++k){
-            for (int p = 0; p < padding; ++p){
-                species[(i * Nj + p) * below + k] = species[(Nj * (i + 1) - 2* padding + p) * below + k];
-                species[(Nj * (i + 1) - padding + p) * below + k] = species[(i * Nj + padding + p) * below + k];
-            }
-        }
-    }*/
+void periodic_bound(input_t* input, int dim, int* aux_is, REAL* species, int side){
 
 }
 
-void forced_periodic_bound(int total_dims, int* Ns, int dim, int padding, REAL* species){
+void wall_bound(input_t* input, int dim, int* aux_is, REAL* species, int side){
+
+    if(dim >= input->mom_dims) return;
 
     int above = 1;
     int below = 1;
-    int Nj = Ns[dim];
+    int Nj = input->pos_points[dim];
     for(int j = 0; j < dim; ++j){
-        above *= Ns[j];
+        above *= input->pos_points[j];
     }
-    for(int j = dim+1; j < total_dims; ++j){
-        below *= Ns[j];
+    for(int j = dim+1; j < input->pos_dims; ++j){
+        below *= input->pos_points[j];
     }
 
-    for(int i = 0; i < above; ++i){
-        for(int k = 0; k < below; ++k){
-            for (int p = 0; p < padding; ++p){
-                species[(i * Nj + p) * below + k] = species[(Nj * (i + 1) - 2* padding + p) * below + k];
-                species[(Nj * (i + 1) - padding + p) * below + k] = species[(i * Nj + padding + p) * below + k];
+    int new_mp=0;
+
+    if(side){
+        for(int mp = 0; mp < input->mom_total; ++mp){
+            //Calculate new momentum point for velocity reflection along 'dim' axis
+            axis_index(input->mom_dims, input->mom_points, aux_is, mp);
+            //printf("%d\n",aux_is[dim]);
+            aux_is[dim] = -2 * (int)(round(input->mom_min[dim]/input->mom_delta[dim]))-aux_is[dim] + 2*input->padding;
+            //printf("%d\n\n",aux_is[dim]);
+            new_mp = list_index(input->mom_dims, input->mom_points, aux_is);
+            //Fill ghost cells
+            for(int ab = 0; ab < above; ++ab){
+                for(int bl = 0; bl < below; ++bl){
+                    for(int p = 0; p < input->padding; ++p){
+                        // Positive boundary
+                        species[(((ab+1) * Nj - input->padding + p) * below + bl) * input->mom_total + mp] = species[(((ab+1) * Nj - 2*input->padding + p) * below + bl) * input->mom_total + new_mp];
+                    }
+                }
             }
         }
     }
-
-}
-
-void forced_field_periodic_bound(int total_dims, int* Ns, int dim, int padding, COMPLEX* species){
-    
-    int above = 1;
-    int below = 1;
-    int Nj = Ns[dim];
-    for(int j = 0; j < dim; ++j){
-        above *= Ns[j];
-    }
-    for(int j = dim+1; j < total_dims; ++j){
-        below *= Ns[j];
-    }
-
-    for(int i = 0; i < above; ++i){
-        for(int k = 0; k < below; ++k){
-            for (int p = 0; p < padding; ++p){
-                species[(i * Nj + p) * below + k] = species[(Nj * (i + 1) - 2* padding + p) * below + k];
-                species[(Nj * (i + 1) - padding + p) * below + k] = species[(i * Nj + padding + p) * below + k];
+    else{
+        for(int mp = 0; mp < input->mom_total; ++mp){
+            //Calculate new momentum point for velocity reflection along 'dim' axis
+            axis_index(input->mom_dims, input->mom_points, aux_is, mp);
+            //printf("%d\n",aux_is[dim]);
+            aux_is[dim] = -2 * (int)(round(input->mom_min[dim]/input->mom_delta[dim]))-aux_is[dim] + 2*input->padding;
+            //printf("%d\n\n",aux_is[dim]);
+            new_mp = list_index(input->mom_dims, input->mom_points, aux_is);
+            //Fill ghost cells
+            for(int ab = 0; ab < above; ++ab){
+                for(int bl = 0; bl < below; ++bl){
+                    for(int p = 0; p < input->padding; ++p){
+                        // Negative Boundary
+                        species[((ab * Nj + p) * below + bl) * input->mom_total + mp] = species[((ab * Nj + 2*input->padding-p-1) * below + bl) * input->mom_total + new_mp];
+                    }
+                }
             }
         }
     }
-
 }
 
 void boundary_shift(input_t* input, COMPLEX* start, COMPLEX* final, int* aux){

@@ -100,6 +100,9 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
         if(!strcmp(input->pos_bound_names[i],"periodic")){
             input->pos_bounds[i]=&periodic_bound;
         }
+        if(!strcmp(input->pos_bound_names[i],"wall")){
+            input->pos_bounds[i]=&wall_bound;
+        }
     }
 
     int field_param_count=0;

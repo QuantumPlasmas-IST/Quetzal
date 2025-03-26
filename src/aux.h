@@ -19,8 +19,6 @@ typedef void(*disp_t)(int, int, REAL*); // type: pointer to dispersion relation 
 
 typedef REAL(*init_t)(int, REAL*, REAL*); // type: pointer to initial condition function
 
-typedef void(*bound_t)(int, int*, int, int, REAL*); //type: pointer to boundary condition function
-
 typedef COMPLEX(*kernel_t)(int, COMPLEX, REAL*); // type: pointer to convolution kernel function
 
 typedef struct input{
@@ -80,8 +78,8 @@ typedef struct input{
 
     char** pos_bound_names;
     char** mom_bound_names;
-    bound_t* pos_bounds;
-    bound_t* mom_bounds;
+    void(**pos_bounds)(struct input*, int, int*, REAL*, int);
+    void(**mom_bounds)(struct input*, int, int*, REAL*, int);
 
     REAL** source_charges;
     REAL** force_charges;
@@ -103,5 +101,7 @@ typedef struct input{
 } input_t;
 
 typedef REAL(*force_t)(input_t*, COMPLEX**, int, int, int, int); //type: pointer to force function
+
+typedef void(*bound_t)(input_t*, int, int*, REAL*, int); //type: pointer to boundary condition function
 
 #endif
