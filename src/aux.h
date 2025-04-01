@@ -78,8 +78,10 @@ typedef struct input{
 
     char** pos_bound_names;
     char** mom_bound_names;
+    char** field_bound_names;
     void(**pos_bounds)(struct input*, int, int*, REAL*, int);
     void(**mom_bounds)(struct input*, int, int*, REAL*, int);
+    void(**field_bounds)(struct input*, int, int*, COMPLEX*, int);
 
     REAL** source_charges;
     REAL** force_charges;
@@ -103,5 +105,7 @@ typedef struct input{
 typedef REAL(*force_t)(input_t*, COMPLEX**, int, int, int, int); //type: pointer to force function
 
 typedef void(*bound_t)(input_t*, int, int*, REAL*, int); //type: pointer to boundary condition function
+
+typedef void(*fbound_t)(input_t*, int, int*, COMPLEX*, int); //type: pointer to field boundary condition function
 
 #endif

@@ -123,7 +123,7 @@ REAL** solve(input_t* input){
     if(!input->rank) printf("Initial Conditions Applied\n");
     apply_bound_cond(input, species, left_ghost_buffer, right_ghost_buffer, is);
     apply_bound_cond(input, species_aux, left_ghost_buffer, right_ghost_buffer, is);
-    for (int fld = 0; fld < input->n_fields; ++fld) field_bound_cond(input, fields, left_field_buffer, right_field_buffer, fld);
+    for (int fld = 0; fld < input->n_fields; ++fld) field_bound_cond(input, fields, left_field_buffer, right_field_buffer, is, fld);
     if(!input->rank) printf("Boundary Conditions Applied\n");
     integrate_source(input, species, sources, is, aux_momentum);
 
@@ -526,7 +526,7 @@ void rungeKutta2(input_t* input, REAL** species, REAL** species_aux, COMPLEX** s
         if(!strcmp(input->field_type[fld],"static")){
             convolve_source(input, sources, fields_fft, fields, aux_is, aux_momentum, fld);
             invert_field(input, fields, fields_fft, aux_is, fld);
-            field_bound_cond(input, fields, left_field_buffer, right_field_buffer, fld);
+            field_bound_cond(input, fields, left_field_buffer, right_field_buffer, aux_is, fld);
         }
     }
     
@@ -548,8 +548,8 @@ void rungeKutta2(input_t* input, REAL** species, REAL** species_aux, COMPLEX** s
             for(int j = 0; j < input->pos_total; ++j){
                 fields_aux[fld][j] = fields[fld][j] + input->deltaT * fields_deriv[fld][j];
             }
-            field_bound_cond(input, fields, left_field_buffer, right_field_buffer, fld);
-            field_bound_cond(input, fields_aux, left_field_buffer, right_field_buffer, fld);
+            field_bound_cond(input, fields, left_field_buffer, right_field_buffer, aux_is, fld);
+            field_bound_cond(input, fields_aux, left_field_buffer, right_field_buffer, aux_is, fld);
         }
     }
 
@@ -573,7 +573,7 @@ void rungeKutta2(input_t* input, REAL** species, REAL** species_aux, COMPLEX** s
         if(!strcmp(input->field_type[fld],"static")){
             convolve_source(input, sources, fields_fft, fields_aux, aux_is, aux_momentum, fld);
             invert_field(input, fields_aux, fields_fft, aux_is, fld);
-            field_bound_cond(input, fields_aux, left_field_buffer, right_field_buffer, fld);
+            field_bound_cond(input, fields_aux, left_field_buffer, right_field_buffer, aux_is, fld);
         }
     }
 
@@ -595,7 +595,7 @@ void rungeKutta2(input_t* input, REAL** species, REAL** species_aux, COMPLEX** s
             for(int j = 0; j < input->pos_total; ++j){
                 fields_aux[fld][j] += input->deltaT * fields_deriv[fld][j];
             }
-            field_bound_cond(input, fields_aux, left_field_buffer, right_field_buffer, fld);
+            field_bound_cond(input, fields_aux, left_field_buffer, right_field_buffer, aux_is, fld);
         }
     }
 
@@ -624,7 +624,7 @@ void rungeKutta2(input_t* input, REAL** species, REAL** species_aux, COMPLEX** s
             for(int j = 0; j < input->pos_total; ++j){
                 fields[fld][j] = 0.5*(fields[fld][j] + fields_aux[fld][j]);
             }
-            field_bound_cond(input, fields, left_field_buffer, right_field_buffer, fld);
+            field_bound_cond(input, fields, left_field_buffer, right_field_buffer, aux_is, fld);
         }
     }
     

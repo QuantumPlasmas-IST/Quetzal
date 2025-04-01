@@ -103,6 +103,19 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
         if(!strcmp(input->pos_bound_names[i],"wall")){
             input->pos_bounds[i]=&wall_bound;
         }
+
+        if(!strcmp(input->field_bound_names[i],"dirichelet")){
+            input->field_bounds[i]=&field_dirichelet_bound;
+        }
+        if(!strcmp(input->field_bound_names[i],"periodic")){
+            input->field_bounds[i]=&field_periodic_bound;
+        }
+        if(!strcmp(input->field_bound_names[i],"neumann")){
+            input->field_bounds[i]=&field_neumann_bound;
+        }
+        if(!strcmp(input->field_bound_names[i],"second")){
+            input->field_bounds[i]=&field_second_bound;
+        }
     }
 
     int field_param_count=0;
@@ -382,11 +395,13 @@ input_t* read_input(const char* name, int rank, int size){
     input->field_init_names = NULL;
     input->pos_bound_names = NULL;
     input->mom_bound_names = NULL;
+    input->field_bound_names = NULL;
     input->pos_inits = NULL;
     input->mom_inits = NULL;
     input->field_inits = NULL;
     input->pos_bounds = NULL;
     input->mom_bounds = NULL;
+    input->field_bounds = NULL;
     input->pos_init_params = NULL;
     input->mom_init_params = NULL;
     input->field_init_params = NULL;
@@ -508,6 +523,11 @@ input_t* read_input(const char* name, int rank, int size){
                     strcpy(num_part, "");
                     count++;
                 }   
+                if(!strcmp(txt_part,"FIELD_BOUND")){
+                    strcpy((input->field_bound_names)[count], num_part);     // Character (,) pushes back new value of max to array
+                    strcpy(num_part, "");
+                    count++;
+                }   
                 if(!strcmp(txt_part,"KERNEL")){
                     strcpy((input->kernel_names)[count], num_part);     // Character (,) pushes back new value of max to array
                     strcpy(num_part, "");
@@ -563,12 +583,17 @@ input_t* read_input(const char* name, int rank, int size){
 
             input->pos_bound_names=malloc((input->pos_dims)*sizeof(char*));
             char* aux_bound_names = calloc((input->pos_dims) * STR_SIZE, sizeof(char));
+
+            input->field_bound_names=malloc((input->pos_dims)*sizeof(char*));
+            char* aux2_bound_names = calloc((input->pos_dims) * STR_SIZE, sizeof(char));
             
             for (int i = 0; i < input->pos_dims; ++i){
                 input->pos_bound_names[i] = aux_bound_names + i*STR_SIZE;
+                input->field_bound_names[i] = aux2_bound_names + i*STR_SIZE;
             }
 
             input->pos_bounds = malloc((input->pos_dims)*sizeof(bound_t));
+            input->field_bounds = malloc((input->pos_dims)*sizeof(fbound_t));
 
             input->procs = malloc(input->pos_dims * sizeof(int));
             input->parallel_pos = malloc(input->pos_dims * sizeof(int));
@@ -709,6 +734,7 @@ input_t* read_input(const char* name, int rank, int size){
         if(!strcmp(txt_part,"FIELD_INIT")) strcpy((input->field_init_names)[count], num_part);
         if(!strcmp(txt_part,"POS_BOUND")) strcpy((input->pos_bound_names)[count], num_part);
         if(!strcmp(txt_part,"MOM_BOUND")) strcpy((input->mom_bound_names)[count], num_part);
+        if(!strcmp(txt_part,"FIELD_BOUND")) strcpy((input->field_bound_names)[count], num_part);
         if(!strcmp(txt_part,"DISP")) strcpy(input->dispersion_names[count],num_part);
         if(!strcmp(txt_part,"KERNEL")) strcpy(input->kernel_names[count],num_part);
         if(!strcmp(txt_part,"FORCE")) strcpy(input->force_names[count],num_part);
@@ -771,6 +797,9 @@ void print_input(input_t* input){
     for(int j = 0; j < input->mom_dims; ++j){
         printf("Boundary Condition of momentum axis %d: %s\n", j, input->mom_bound_names[j]);
     }
+    for(int j = 0; j < input->pos_dims; ++j){
+        printf("Boundary Condition of field axis %d: %s\n", j, input->field_bound_names[j]);
+    }
     printf("Number of Species = %d\n", input->n_species);
     printf("Number of Fields = %d\n", input->n_fields);
     for (int i = 0; i < input->n_fields; ++i){
@@ -830,9 +859,11 @@ void free_input(input_t* input){
     free(input->field_init_params);
 
     free(input->pos_bound_names[0]);
+    free(input->field_bound_names[0]);
     free(input->pos_init_names[0]);
     free(input->field_init_names[0]);
     free(input->pos_bound_names);
+    free(input->field_bound_names);
     free(input->pos_init_names);
     free(input->field_init_names);
 
@@ -840,8 +871,10 @@ void free_input(input_t* input){
     free(input->mom_init_names[0]);
     free(input->mom_bound_names);
     free(input->mom_init_names);
+
     free(input->pos_bounds);
     free(input->mom_bounds);
+    free(input->field_bounds);
 
     free(input->grid_factor);
     free(input->space_factor);

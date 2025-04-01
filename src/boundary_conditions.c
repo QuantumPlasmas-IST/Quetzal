@@ -23,14 +23,18 @@ void apply_bound_cond(input_t* input, REAL** species, REAL*** left_buffer, REAL*
     }
 }
 
-void field_bound_cond(input_t* input, COMPLEX** fields, COMPLEX*** left_buffer, COMPLEX*** right_buffer, int fld){
+void field_bound_cond(input_t* input, COMPLEX** fields, COMPLEX*** left_buffer, COMPLEX*** right_buffer, int* aux_is, int fld){
 
     field_cell_transfer(input, fields[fld], left_buffer, right_buffer);
 
-    for (int ps = 0; ps < input->pos_total; ++ps){
-        //fields[fld][ps] = creal(fields[fld][ps]);
+    for (int j = 0; j < input->pos_dims; ++j){
+        if(input->parallel_pos[j]==0){
+            input->field_bounds[j](input, j, aux_is, fields[fld],0);
+        }
+        if(input->parallel_pos[j]==input->procs[j]-1){
+            input->field_bounds[j](input, j, aux_is, fields[fld],1);
+        }
     }
-    
 }
 
 void dirichelet_bound(input_t* input, int dim, int* aux_is, REAL* species, int side){
@@ -119,6 +123,106 @@ void wall_bound(input_t* input, int dim, int* aux_is, REAL* species, int side){
                         // Negative Boundary
                         species[((ab * Nj + p) * below + bl) * input->mom_total + mp] = species[((ab * Nj + 2*input->padding-p-1) * below + bl) * input->mom_total + new_mp];
                     }
+                }
+            }
+        }
+    }
+}
+
+void field_dirichelet_bound(input_t* input, int dim, int* aux_is, COMPLEX* fields, int side){
+
+    int above = 1;
+    int below = 1;
+    int Nj = input->pos_points[dim];
+    for(int j = 0; j < dim; ++j){
+        above *= input->pos_points[j];
+    }
+    for(int j = dim+1; j < input->pos_dims; ++j){
+        below *= input->pos_points[j];
+    }
+
+    if(side){
+        for(int i = 0; i < above; ++i){
+            for(int k = 0; k < below; ++k){
+                for (int p = 0; p < input->padding; ++p){
+                    fields[(Nj * (i + 1) - p - 1) * below + k] = 0;
+                }
+            }
+        }
+    }
+    else{
+        for(int i = 0; i < above; ++i){
+            for(int k = 0; k < below; ++k){
+                for (int p = 0; p < input->padding; ++p){
+                    fields[(i * Nj + p) * below + k] = 0;
+                }
+            }
+        }
+    }
+}
+
+void field_periodic_bound(input_t* input, int dim, int* aux_is, COMPLEX* fields, int side){
+
+}
+
+void field_neumann_bound(input_t* input, int dim, int* aux_is, COMPLEX* fields, int side){
+
+    int above = 1;
+    int below = 1;
+    int Nj = input->pos_points[dim];
+    for(int j = 0; j < dim; ++j){
+        above *= input->pos_points[j];
+    }
+    for(int j = dim+1; j < input->pos_dims; ++j){
+        below *= input->pos_points[j];
+    }
+
+    if(side){
+        for(int i = 0; i < above; ++i){
+            for(int k = 0; k < below; ++k){
+                for (int p = 0; p < input->padding; ++p){
+                    fields[(Nj * (i + 1) - p - 1) * below + k] = fields[(Nj * (i + 1) - input->padding) * below + k];
+                }
+            }
+        }
+    }
+    else{
+        for(int i = 0; i < above; ++i){
+            for(int k = 0; k < below; ++k){
+                for (int p = 0; p < input->padding; ++p){
+                    fields[(i * Nj + p) * below + k] = fields[(i * Nj + input->padding) * below + k];
+                }
+            }
+        }
+    }
+}
+
+void field_second_bound(input_t* input, int dim, int* aux_is, COMPLEX* fields, int side){
+
+    int above = 1;
+    int below = 1;
+    int Nj = input->pos_points[dim];
+    for(int j = 0; j < dim; ++j){
+        above *= input->pos_points[j];
+    }
+    for(int j = dim+1; j < input->pos_dims; ++j){
+        below *= input->pos_points[j];
+    }
+
+    if(side){
+        for(int i = 0; i < above; ++i){
+            for(int k = 0; k < below; ++k){
+                for (int p = 0; p < input->padding; ++p){
+                    fields[(Nj * (i + 1) - p - 1) * below + k] = 2 * fields[(Nj * (i + 1) - input->padding) * below + k] - fields[(Nj * (i + 1) - input->padding - 1) * below + k];
+                }
+            }
+        }
+    }
+    else{
+        for(int i = 0; i < above; ++i){
+            for(int k = 0; k < below; ++k){
+                for (int p = 0; p < input->padding; ++p){
+                    fields[(i * Nj + p) * below + k] = 2 * fields[(i * Nj + input->padding) * below + k] - fields[(i * Nj + input->padding + 1) * below + k];
                 }
             }
         }

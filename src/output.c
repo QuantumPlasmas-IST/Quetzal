@@ -147,8 +147,12 @@ void open_file(input_t* input){
     status = H5Awrite(attribute_id, H5T_NATIVE_CHAR, input->operator);
     status = H5Aclose(attribute_id);
 
-    attribute_id = H5Acreate (file_id, "Initial Condition Functions", H5T_NATIVE_CHAR, string_fields_dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
+    attribute_id = H5Acreate (file_id, "Position Initial Condition Functions", H5T_NATIVE_CHAR, string_pos_dims_dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
     status = H5Awrite(attribute_id, H5T_NATIVE_CHAR, input->pos_init_names[0]);
+    status = H5Aclose(attribute_id);
+
+    attribute_id = H5Acreate (file_id, "Momentum Initial Condition Functions", H5T_NATIVE_CHAR, string_mom_dims_dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
+    status = H5Awrite(attribute_id, H5T_NATIVE_CHAR, input->mom_init_names[0]);
     status = H5Aclose(attribute_id);
     
     status = H5Sclose(scalar_dataspace_id);
