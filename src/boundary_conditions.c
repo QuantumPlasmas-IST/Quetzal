@@ -77,6 +77,8 @@ void wall_bound(input_t* input, int dim, int* aux_is, REAL* species, int side){
 
     if(dim >= input->mom_dims) return;
 
+    int old_is = 0;
+
     int above = 1;
     int below = 1;
     int Nj = input->pos_points[dim];
@@ -93,16 +95,29 @@ void wall_bound(input_t* input, int dim, int* aux_is, REAL* species, int side){
         for(int mp = 0; mp < input->mom_total; ++mp){
             //Calculate new momentum point for velocity reflection along 'dim' axis
             axis_index(input->mom_dims, input->mom_points, aux_is, mp);
-            //printf("%d\n",aux_is[dim]);
-            aux_is[dim] = -2 * (int)(round(input->mom_min[dim]/input->mom_delta[dim]))-aux_is[dim] + 2*input->padding;
-            //printf("%d\n\n",aux_is[dim]);
+            old_is = aux_is[dim];
+            aux_is[dim] = (int)(round(-2 * input->mom_min[dim]/input->mom_delta[dim]))-aux_is[dim] + 2*input->padding;
             new_mp = list_index(input->mom_dims, input->mom_points, aux_is);
+            
+            // Test if velocity is positive
+            if(aux_is[dim] < old_is){
+                for(int ab = 0; ab < above; ++ab){
+                    for(int bl = 0; bl < below; ++bl){
+                        for(int p = 0; p < input->padding; ++p){
+                            // Positive boundary
+                            species[(((ab+1) * Nj - input->padding + p) * below + bl) * input->mom_total + mp] = 0;
+                        }
+                    }
+                }
+            }
             //Fill ghost cells
-            for(int ab = 0; ab < above; ++ab){
-                for(int bl = 0; bl < below; ++bl){
-                    for(int p = 0; p < input->padding; ++p){
-                        // Positive boundary
-                        species[(((ab+1) * Nj - input->padding + p) * below + bl) * input->mom_total + mp] = species[(((ab+1) * Nj - 2*input->padding + p) * below + bl) * input->mom_total + new_mp];
+            else{
+                for(int ab = 0; ab < above; ++ab){
+                    for(int bl = 0; bl < below; ++bl){
+                        for(int p = 0; p < input->padding; ++p){
+                            // Positive boundary
+                            species[(((ab+1) * Nj - input->padding + p) * below + bl) * input->mom_total + mp] = species[(((ab+1) * Nj - 2*input->padding + p) * below + bl) * input->mom_total + new_mp];
+                        }
                     }
                 }
             }
@@ -112,16 +127,29 @@ void wall_bound(input_t* input, int dim, int* aux_is, REAL* species, int side){
         for(int mp = 0; mp < input->mom_total; ++mp){
             //Calculate new momentum point for velocity reflection along 'dim' axis
             axis_index(input->mom_dims, input->mom_points, aux_is, mp);
-            //printf("%d\n",aux_is[dim]);
-            aux_is[dim] = -2 * (int)(round(input->mom_min[dim]/input->mom_delta[dim]))-aux_is[dim] + 2*input->padding;
-            //printf("%d\n\n",aux_is[dim]);
+            old_is = aux_is[dim];
+            aux_is[dim] = (int)(round(-2 * input->mom_min[dim]/input->mom_delta[dim]))-aux_is[dim] + 2*input->padding;
             new_mp = list_index(input->mom_dims, input->mom_points, aux_is);
+
+            // Test if velocity is negative
+            if(aux_is[dim] > old_is){
+                for(int ab = 0; ab < above; ++ab){
+                    for(int bl = 0; bl < below; ++bl){
+                        for(int p = 0; p < input->padding; ++p){
+                            // Negative Boundary
+                            species[((ab * Nj + p) * below + bl) * input->mom_total + mp] = 0;
+                        }
+                    }
+                }
+            }
             //Fill ghost cells
-            for(int ab = 0; ab < above; ++ab){
-                for(int bl = 0; bl < below; ++bl){
-                    for(int p = 0; p < input->padding; ++p){
-                        // Negative Boundary
-                        species[((ab * Nj + p) * below + bl) * input->mom_total + mp] = species[((ab * Nj + 2*input->padding-p-1) * below + bl) * input->mom_total + new_mp];
+            else{
+                for(int ab = 0; ab < above; ++ab){
+                    for(int bl = 0; bl < below; ++bl){
+                        for(int p = 0; p < input->padding; ++p){
+                            // Negative Boundary
+                            species[((ab * Nj + p) * below + bl) * input->mom_total + mp] = species[((ab * Nj + 2*input->padding-p-1) * below + bl) * input->mom_total + new_mp];
+                        }
                     }
                 }
             }

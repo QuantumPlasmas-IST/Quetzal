@@ -10,6 +10,8 @@ void apply_init_cond(input_t* input, REAL** species);
 void field_init_cond(input_t* input, COMPLEX** fields);
 
 REAL gaussian(int n, REAL* x, REAL* p);
+REAL linear_gaussian(int n, REAL* x, REAL* p);
+REAL anisotropic_gaussian(int n, REAL* x, REAL* p);
 REAL uniform(int n, REAL* x, REAL* p);
 REAL double_gaussian(int n, REAL* x, REAL* p);
 REAL noise(int n, REAL* x, REAL* p);

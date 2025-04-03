@@ -63,6 +63,21 @@ REAL gaussian(int n, REAL* x, REAL* p){
     return p[0] * exp( -x[0] / (p[1]*p[1]));
 }
 
+REAL linear_gaussian(int n, REAL* x, REAL* p){
+    x[0] = (x[0] - p[2])*(x[0] - p[2]);
+
+    return p[0] * exp( -x[0] / (p[1]*p[1]));
+}
+
+REAL anisotropic_gaussian(int n, REAL* x, REAL* p){
+    x[0] = (x[0] - p[n+1])*(x[0] - p[n+1])/(p[1]*p[1]);
+    for(int i = 1; i < n; ++i){
+        x[0] += (x[i] - p[n+1+i])*(x[i] - p[n+1+i])/(p[1+i]*p[1+i]);
+    }
+    //printf("%f\n", p[0] * exp( -x[0] / (p[1]*p[1])) / (sqrt(M_PI) * p[1]));
+    return p[0] * exp( -x[0]);
+}
+
 REAL uniform(int n, REAL* x, REAL* p){
     for (int i = 0; i < n; ++i){
         if (x[i] < p[1+2*i]) return 0;

@@ -169,6 +169,13 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
                 field_param_count++;
             }
         }
+        if(!strcmp(input->field_init_names[i],"anisotropic gaussian")){
+            input->field_inits[i]=&anisotropic_gaussian;
+            for (int j = 0; j < 1+2*input->pos_dims; ++j){
+                input->field_init_params[i][j]=field_parameters[field_param_count];
+                field_param_count++;
+            }
+        }
         if(!strcmp(input->field_init_names[i],"uniform")){
             input->field_inits[i]=&uniform;
             for (int j = 0; j < 1+2*input->pos_dims; ++j){
@@ -213,6 +220,20 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
         if(!strcmp(input->pos_init_names[i],"gaussian")){
             input->pos_inits[i]=&gaussian;
             for (int j = 0; j < 2+input->pos_dims; ++j){
+                input->pos_init_params[i][j]=pos_parameters[pos_param_count];
+                pos_param_count++;
+            }
+        }
+        if(!strcmp(input->pos_init_names[i],"linear gaussian")){
+            input->pos_inits[i]=&linear_gaussian;
+            for (int j = 0; j < 3; ++j){
+                input->pos_init_params[i][j]=pos_parameters[pos_param_count];
+                pos_param_count++;
+            }
+        }
+        if(!strcmp(input->pos_init_names[i],"anisotropic gaussian")){
+            input->pos_inits[i]=&anisotropic_gaussian;
+            for (int j = 0; j < 1+2*input->pos_dims; ++j){
                 input->pos_init_params[i][j]=pos_parameters[pos_param_count];
                 pos_param_count++;
             }
