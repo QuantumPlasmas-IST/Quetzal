@@ -5,9 +5,14 @@ import h5py
 import scipy as scp
 
 #############################
-name = 'weibel4'
-iter = 150000
+#name = 'dispersion_2DLin'
+name = 'weibel_quadTest6'
+iter = 15000
 #############################
+
+#fZe = np.loadtxt('/home/diogo/Ze_results/data/no_exchange_nondegenerate.txt')
+#fZe = fZe.reshape((100,61,121,121))
+#chargeZe = (np.sum(fZe, axis=(2,3))*(2*2/121/121))[99,:]
 
 # Allows the use of LateX notation in labels
 plt.rcParams['text.usetex'] = True
@@ -25,9 +30,10 @@ def func2(x):
 file=h5py.File('./output/'+name+'.h5','r')
 
 potential = file['/Fields'+str(iter)][1]['real']
-pot_im = file['/Fields'+str(iter)][1]['imaginary']
+#pot_im = file['/Fields'+str(iter)][1]['imaginary']
 potential2 = file['/Fields'+str(iter)][2]['real']
-pot_im2 = file['/Fields'+str(iter)][2]['imaginary']
+potential3 = file['/Fields'+str(iter)][0]['real']
+#pot_im2 = file['/Fields'+str(iter)][2]['imaginary']
 
 charge = file['/Sources'+str(iter)][0]['real']
 charge_im = file['/Sources'+str(iter)][0]['imaginary']
@@ -45,10 +51,15 @@ for i in range(253,259):
     kernel[i] = 1
 #potential2 = np.convolve(charge,kernel,mode='same')
 
-#plt.scatter(np.linspace(pos_min,pos_max,pos_num, endpoint=False), potential, c='r', s=1)
-#plt.scatter(np.linspace(pos_min,pos_max,pos_num, endpoint=False), pot_im, c='b', s=1)
 plt.plot(np.linspace(pos_min,pos_max,pos_num, endpoint=False), potential, c='r')
 plt.plot(np.linspace(pos_min,pos_max,pos_num, endpoint=False), potential2, c='b')
+plt.plot(np.linspace(pos_min,pos_max,pos_num, endpoint=False), potential3, c='g')
+#plt.plot(np.linspace(pos_min,pos_max,pos_num, endpoint=False), charge, c='y')
+#plt.plot(np.linspace(pos_min,pos_max,pos_num, endpoint=False), charge/4.6, c='r')
+#plt.plot(np.linspace(pos_min,pos_max,pos_num, endpoint=False), potential/50, c='b')
+#plt.plot(np.linspace(pos_min,pos_max,61, endpoint=False), chargeZe/(np.pi*np.pi), c='g')
+#print(charge[32]/chargeZe[30]*(4*np.pi*np.pi/4.6))
+
 plt.xlabel(r"$x$ [$c \omega_{pe}^{-1}$]")
 plt.title(r"$t = $ "+str(iter*dt)+r" $\omega_{pe}^{-1}$") 
 plt.tight_layout()

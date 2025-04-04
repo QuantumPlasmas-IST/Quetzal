@@ -7,7 +7,7 @@ import scipy.optimize as opt
 import mpmath as mpm
 
 #############################
-name = 'dispersion_2DFerm1'
+name = 'dispersion_3DMax1'
 T = 0.01
 u = 0.001
 ge = np.pi
@@ -95,7 +95,7 @@ plt.plot(qs, qs, c = 'r')     # Damping threshold
 plt.xlim((-5,5))
 plt.ylim((0,np.pi))
 plt.clim((-5,2))
-plt.xlabel(r"$k_x \cdot l_0$")
+plt.xlabel(r"$k_x$[$\omega_{pe} c^{-1}$]")
 plt.ylabel(r"$\omega$[$\omega_{pe}$]")
 plt.colorbar(sc)
 plt.tight_layout()
@@ -104,11 +104,12 @@ plt.close()
 
 sc = plt.imshow(np.log10(Sphi+1e-5), extent = (-kmax/2-dk/2,kmax/2-dk/2,-wmax/2-dw/2,wmax/2-dw/2), aspect='auto', origin = 'lower')
 #plt.plot(-qs, np.sqrt(qs/2 + np.sqrt((qs/2)**2 + 3*gamma*qs**3)), c = 'g')                    # 2D Maxwell
-plt.plot(qs, np.sqrt(qs + 3*gamma * qs**2), c = 'r')     # 2D Fermi
+#plt.plot(qs, np.sqrt(qs + 3*gamma * qs**2), c = 'r')     # 2D Fermi
 #plt.plot(qs, qs, c = 'r')     # Damping threshold
-plt.xlim((-10,10))
-plt.ylim((0,4))
-plt.xlabel(r"$k_x \cdot l_0$")
+plt.plot(qs, np.sqrt(2+3*T*qs*qs), c = 'r')     # 3DMaxwell
+plt.xlim((-8,8))
+plt.ylim((0,np.pi))
+plt.xlabel(r"$k_x\cdot l_0$")
 plt.ylabel(r"$\omega\cdot t_0$")
 plt.colorbar(sc)
 plt.tight_layout()
@@ -156,15 +157,15 @@ if(name == 'dispersion_3DMaxwellQuadratic4'):
 params, cov = opt.curve_fit(disp_rel,kays[1:limit],omega[1:limit]**2)
 
 plt.plot(kays, omega)
-plt.plot(kays[:limit], np.sqrt(disp_rel(kays[:limit],params[0],params[1])),zorder=1000)
+plt.plot(kays[:limit], np.sqrt(disp_rel(kays[:limit],params[0],params[1])))
 plt.plot(kays[:2*limit], np.sqrt(disp_rel(kays[:2*limit],1,gamma)))
 plt.xlim((0,5))
 plt.tight_layout()
 plt.savefig("./img/"+name+"_omega.png", dpi=200)
 plt.close()
 
-print("alpha =", params[0],"\pm", cov[0,0], cov[0,1])
-print("gamma =", params[1],"\pm", cov[1,1], cov[1,0])
+print("alpha =", params[0])
+print("gamma =", params[1])
 print()
 print(gamma)
 fit_alpha = params[0]
@@ -174,11 +175,11 @@ Drho = np.abs(scp.fft.fftshift(scp.fft.fft(rho,axis=-1),axes=-1))
 Dphi = np.abs(scp.fft.fftshift(scp.fft.fft(phi,axis=-1),axes=-1))
 
 sc = plt.imshow(np.log(Drho+1e-5), extent = (-kmax/2-dk/2,kmax/2-dk/2,0,Nt*dt), aspect='auto', origin = 'lower')
-plt.xlim((-15,15))
+plt.xlim((-10,10))
 plt.ylim((0,500))
 plt.xlabel(r"$k_x\cdot l_0$")
 plt.ylabel(r"$t/t_0$")
-plt.clim((-6,-3))
+plt.clim((-7,-2))
 plt.colorbar(sc)
 plt.tight_layout()
 plt.savefig("./img/"+name+"_chargeDamp.png", dpi=200)
@@ -186,9 +187,9 @@ plt.close()
 
 sc = plt.imshow(np.log(Dphi+1e-5), extent = (-kmax/2-dk/2,kmax/2-dk/2,0,Nt*dt), aspect='auto', origin = 'lower')
 plt.xlim((-10,10))
-plt.ylim((0,500))
-plt.xlabel(r"$k_x\cdot l_0$")
-plt.ylabel(r"$t/t_0$")
+#plt.ylim((0,6))
+plt.xlabel(r"$k_x$[$\omega_{pe} c^{-1}$]")
+plt.ylabel(r"$t$[$\omega_{pe}^{-1}$]")
 plt.colorbar(sc)
 plt.tight_layout()
 plt.savefig("./img/"+name+"_fieldDamp.png", dpi=200)
@@ -212,18 +213,18 @@ def maxwell_derivative(func_p, func_T):
     return -2/np.sqrt(2*np.pi*func_T) * func_p/func_T * np.exp(-func_p*func_p/(2*func_T))
 
 def damping_rate_max(func_k, func_T):
-    func_omegaP = 1
+    func_omegaP = 2
     func_beta = 3*func_T
-    func_w = np.sqrt(func_omegaP * func_k + func_beta * func_k**2)
+    func_w = np.sqrt(func_omegaP + func_beta * func_k**2)
     func_p = func_w/func_k
-    return np.pi * func_w / (4 * func_k) * maxwell_derivative(func_p,func_T)
+    return np.pi * func_w / (func_k*func_k) * maxwell_derivative(func_p,func_T)
 
-landau_size=90
+landau_size=48
 exp_damps = np.zeros(landau_size)
 
-ptest=70
+ptest=46
 
-for it in range(0,90):
+for it in range(0,48):
 
     print(it)
 
@@ -258,26 +259,28 @@ for it in range(0,90):
     time_max = times[cond_max]
     
     pro=0.5
-    if(slic>50):
+    if(slic>20):
         pro=0.8
-    if(slic>65):
-        pro=1
-    if(slic>75):
-        pro=0.8
+    if(slic>40):
+        pro=1.5
+    if(slic>46):
+        pro=2
     peaks,_ = scp.signal.find_peaks(signal_raw, prominence = (pro))
     peaks2,_= scp.signal.find_peaks(-signal_raw[peaks])
     #peaks = np.append([0],peaks)
-    threshold = 50
-    if(slic>=50):
+    threshold = 40
+    if(slic>=30):
         threshold=30
-    if(slic>=60):
-        threshold=20
+    if(slic>=41):
+        threshold=25
+    if(slic>=45):
+        threshold=15
     if(slic>=65):
-        nPeaks=6
+        nPeaks=10
     if(slic>=74):
-        nPeaks=5
+        nPeaks=8
     if(slic>=80):
-        nPeaks=4
+        nPeaks=6
 
     if(slic<65):
         params, covs = opt.curve_fit(line, times[peaks[times[peaks]<threshold]], signal_raw[peaks[times[peaks]<threshold]])
@@ -297,7 +300,7 @@ for it in range(0,90):
         #plt.vlines([threshold],[0.000001],[10000000])
         #plt.vlines([times[peaks[peaks2[0]]]],1e-10,1e10)
         #plt.scatter(times[valleys], np.exp(signal_filtered[valleys]), c='orange', zorder = 100)
-        plt.ylim((2e-3,2e2))
+        plt.ylim((1e-2,1e2))
         plt.xlim((0,50))
         plt.yscale('log')
         plt.xlabel(r"$t/t_0$")
@@ -316,15 +319,15 @@ p_theo = np.linspace(1,landau_size*20,landau_size*20,endpoint=True)
 p_exp = np.linspace(1,landau_size,landau_size,endpoint=True)
 for i in range(landau_size*2):
     #th_damps[i] = damping_rate(np.linspace(1,landau_size,landau_size,endpoint=True)[i]*dk,u,T)
-    th_damps[i] = damping_rate(p_theo[i]*dk,u,T)
+    th_damps[i] = damping_rate_max(p_theo[i]*dk,T)
 
-plt.plot(p_theo*dk-2.2, -th_damps, linewidth = 3)
-plt.scatter(p_exp*dk, -exp_damps,c='r',s=150,marker='+',linewidths=1, label = r"$\mu = 0.001$ $m_0 (l_0/t_0)^2$", zorder=10)
+plt.plot(p_theo*dk, -th_damps, linewidth = 3)
+plt.scatter(p_exp*dk, -exp_damps,c='r',s=150,marker='+',linewidths=1, zorder=10)
 #plt.scatter(p_exp[ptest-1]*dk, -exp_damps[ptest-1])
 plt.scatter(np.array([1000])*dk, -exp_damps[ptest-1], label = r"$T = 0.01$ $m_0 (l_0/t_0)^2$")
 #plt.yscale('log')
-plt.xlim((2,9))
-plt.ylim((-0.02,0.5))
+plt.xlim((2,4.8))
+plt.ylim((-0.02,0.15))
 plt.xlabel(r"$k_x\cdot l_0$")
 plt.ylabel(r"$-\gamma\cdot t_0$")
 plt.legend(markerscale=0)
