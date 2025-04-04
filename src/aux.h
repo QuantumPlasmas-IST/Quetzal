@@ -9,24 +9,29 @@
 #include <string.h>
 #include <complex.h>
 #include "compile.h"
+#include "mpi.h"
+#include "fft3d_wrap.h"
+#include "fft2d_wrap.h"
+#include "remap3d_wrap.h"
+#include "remap2d_wrap.h"
 
 typedef void(*disp_t)(int, int, REAL*); // type: pointer to dispersion relation (band) function
 
 typedef REAL(*init_t)(int, REAL*, REAL*); // type: pointer to initial condition function
 
-typedef COMPLEX(*kernel_t)(int, COMPLEX, REAL*); // type: pointer to initial condition function
-
-typedef void(*bound_t)(int, int*, int, int, REAL*); //type: pointer to boundary condition function
+typedef COMPLEX(*kernel_t)(int, COMPLEX, REAL*); // type: pointer to convolution kernel function
 
 typedef struct input{
    
     char* filename;
-    int diag_freq;
+    int pos_diag_freq;
+    int mom_diag_freq;
 
     int pos_dims;
     int mom_dims;
     
     int* pos_points;
+    int* fft_points;
     int* mom_points;
     int pos_total;
     int mom_total;
@@ -34,6 +39,7 @@ typedef struct input{
     REAL* pos_delta;
     REAL* mom_delta;
     REAL* lambda;
+    REAL* dk;
     
     REAL* pos_min;
     REAL* pos_max;
@@ -48,12 +54,17 @@ typedef struct input{
     
     char** dispersion_names;
     disp_t* dispersions;
+
     char* pusher;
     char* operator;
+    
     char** kernel_names;
     kernel_t* kernels;
+    
     char** force_names;
     REAL(**forces)(struct input*, COMPLEX**, int, int, int, int);
+
+    char** field_type;
 
     char** pos_init_names;
     char** mom_init_names;
@@ -67,18 +78,34 @@ typedef struct input{
 
     char** pos_bound_names;
     char** mom_bound_names;
-    bound_t* pos_bounds;
-    bound_t* mom_bounds;
+    char** field_bound_names;
+    void(**pos_bounds)(struct input*, int, int*, REAL*, int);
+    void(**mom_bounds)(struct input*, int, int*, REAL*, int);
+    void(**field_bounds)(struct input*, int, int*, COMPLEX*, int);
 
-    REAL** charges;
+    REAL** source_charges;
+    REAL** force_charges;
+    int** source_moments;
+    REAL*** field_matrix;
 
     int padding;
 
     int* grid_factor;
     int* space_factor;
 
+    int rank;
+    int size;
+    int* procs;
+    int* parallel_pos;
+    int* parallel_factor;
+    void* fft;
+
 } input_t;
 
 typedef REAL(*force_t)(input_t*, COMPLEX**, int, int, int, int); //type: pointer to force function
+
+typedef void(*bound_t)(input_t*, int, int*, REAL*, int); //type: pointer to boundary condition function
+
+typedef void(*fbound_t)(input_t*, int, int*, COMPLEX*, int); //type: pointer to field boundary condition function
 
 #endif

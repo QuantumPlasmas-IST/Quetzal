@@ -12,8 +12,9 @@
 #include "boundary_conditions.h"
 #include "dispersion.h"
 #include "force.h"
+#include "output.h"
 
-input_t* read_input(const char* name);
+input_t* read_input(const char* name, int rank, int size);
 
 void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters, REAL* field_parameters);
 

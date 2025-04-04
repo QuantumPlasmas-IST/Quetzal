@@ -6,7 +6,7 @@ import scipy as scp
 from celluloid import Camera
 
 #############################
-name = 'anomalous'
+name = 'softcore1D'
 #############################
 
 # Allows the use of LateX notation in labels
@@ -26,7 +26,7 @@ mom_min = file.attrs['Momentum Min.']
 mom_max = file.attrs['Momentum Max.']
 Nt = file.attrs['Number of Timesteps']
 #Nt=10050
-diag_f = file.attrs['Diagnostic Frequency']
+diag_f = file.attrs['Full Diagnostic Frequency']
 pos_num = file.attrs['Number of Position Points']
 n_figs = (Nt)//diag_f
 
@@ -34,7 +34,6 @@ for i in range(n_figs):
 
     result = file['/Species'+str(i*diag_f)]
     positrons = result[0]
-    electrons = result[1]
     potential = file['/Fields'+str(i*diag_f)][0]['real']
     charge = file['/Sources'+str(i*diag_f)][0]['real']
 
@@ -43,7 +42,7 @@ for i in range(n_figs):
 
     print("timestep "+str(i*diag_f))
 
-    sc = plt.imshow((positrons-electrons).T, extent = (pos_min[0]-0.05,pos_max[0]+0.05,mom_min[0]-0.05,mom_max[0]+0.05), aspect='auto', origin = 'lower')
+    sc = plt.imshow((positrons).T, extent = (pos_min[0]-0.05,pos_max[0]+0.05,mom_min[0]-0.05,mom_max[0]+0.05), aspect='auto', origin = 'lower')
     plt.xlabel(r"$x$ [$c \omega_{pe}^{-1}$]")
     plt.ylabel(r"$p$ [$m_e c$]")
     plt.plot(np.linspace(pos_min[0],pos_max[0],pos_num[0]), potential, c='r')

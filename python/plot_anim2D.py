@@ -13,7 +13,7 @@ colors_from_img = img[::-1, 0, :]
 my_cmap = LinearSegmentedColormap.from_list('my_cmap', colors_from_img, N=878)
 
 #############################
-name = 'anomalous_warm'
+name = 'anomalous2D'
 supress = -1
 #############################
 
@@ -42,7 +42,7 @@ dx = file.attrs['Position Delta']
 dp = file.attrs['Momentum Delta']
 dt = file.attrs['Time Delta']
 
-shape = tuple(np.concatenate((pos_num,mom_num)))
+shape = tuple(np.concatenate((pos_num,mom_num-4)))
 dl = tuple(np.concatenate((dx,dp)))
 maxs = tuple(np.concatenate((pos_max,mom_max)))
 mins = tuple(np.concatenate((pos_min,mom_min)))
@@ -51,12 +51,9 @@ n_figs = (Nt)//diag_f
 
 for i in range(n_figs):
 
-    result1 = file['/Species'+str(i*diag_f)][0]
-    result2 = file['/Species'+str(i*diag_f)][1]
-    species_l = np.reshape(result1-result2, shape)
-    species = np.sum(species_l, axis=supress) * dl[supress]
-    potential = file['/Fields'+str(i*diag_f)][0]['real']
-    charge = file['/Sources'+str(i*diag_f)][0]['real']
+    result1 = file['/Sources'+str(i*diag_f)][0]['real']
+    result2 = file['/Sources'+str(i*diag_f)][1]['real']
+    species = result2-result1
 
     #potential = (potential-np.amin(potential)) / (np.amax(potential)-np.amin(potential)) * (mom_max[0]-mom_min[0]) + mom_min[0]
     #charge = (charge-np.amin(charge)) / (np.amax(charge)-np.amin(charge)) * (mom_max[0]-mom_min[0]) + mom_min[0]

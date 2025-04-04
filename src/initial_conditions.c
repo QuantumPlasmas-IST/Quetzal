@@ -63,6 +63,21 @@ REAL gaussian(int n, REAL* x, REAL* p){
     return p[0] * exp( -x[0] / (p[1]*p[1]));
 }
 
+REAL linear_gaussian(int n, REAL* x, REAL* p){
+    x[0] = (x[0] - p[2])*(x[0] - p[2]);
+
+    return p[0] * exp( -x[0] / (p[1]*p[1]));
+}
+
+REAL anisotropic_gaussian(int n, REAL* x, REAL* p){
+    x[0] = (x[0] - p[n+1])*(x[0] - p[n+1])/(p[1]*p[1]);
+    for(int i = 1; i < n; ++i){
+        x[0] += (x[i] - p[n+1+i])*(x[i] - p[n+1+i])/(p[1+i]*p[1+i]);
+    }
+    //printf("%f\n", p[0] * exp( -x[0] / (p[1]*p[1])) / (sqrt(M_PI) * p[1]));
+    return p[0] * exp( -x[0]);
+}
+
 REAL uniform(int n, REAL* x, REAL* p){
     for (int i = 0; i < n; ++i){
         if (x[i] < p[1+2*i]) return 0;
@@ -97,7 +112,7 @@ REAL linear_fermi(int n, REAL* x, REAL* p){
     }
     x[0] = sqrt(x[0]);
     
-    return 1.0 / (1 + exp((x[0] - p[0]) / p[1]));
+    return 1.0 / (1 + exp((x[0] - p[0]) / p[1])) / (2*M_PI*p[1]*p[1] * gsl_sf_fermi_dirac_1(p[0] / p[1]));
 }
 
 REAL quad_fermi(int n, REAL* x, REAL* p){
@@ -106,7 +121,7 @@ REAL quad_fermi(int n, REAL* x, REAL* p){
         x[0] += (x[i] - p[2+i])*(x[i] - p[2+i]);
     }
 
-    return 1 / (1 + exp((x[0]/2 - p[0]) / p[1]));
+    return 1 / (1 + exp((x[0]/2 - p[0]) / p[1])) / (2*M_PI*p[1] * gsl_sf_fermi_dirac_0(p[0] / p[1]));
 }
 
 REAL linear_bose(int n, REAL* x, REAL* p){
@@ -135,7 +150,7 @@ REAL linear_maxwell(int n, REAL* x, REAL* p){
     }
     x[0] = sqrt(x[0]);
 
-    return p[0] * exp(- x[0] / p[1]) / (sqrt(M_PI) * p[1]);
+    return p[0] * exp(- x[0] / p[1]) / (2 * pow(sqrt(M_PI) * p[1],n)*tgamma(n)/tgamma(((double)(n))/2.));
 }
 
 REAL quad_maxwell(int n, REAL* x, REAL* p){
@@ -144,18 +159,7 @@ REAL quad_maxwell(int n, REAL* x, REAL* p){
         x[0] += (x[i] - p[2+i])*(x[i] - p[2+i]);
     }
     
-    return p[0] * exp(- x[0]/2 / p[1]) / sqrt(2 * M_PI * p[1]);
-}
-
-REAL circle(int n, REAL* x, REAL* p){
-    if (x[0] > p[1]) return 0;
-    if (x[0] < -p[1]) return 0;
-    return 2*p[0] / (M_PI * p[1]) * sqrt(1-x[0]*x[0]/(p[1]*p[1]));
-}
-
-REAL sphere(int n, REAL* x, REAL* p){
-    if (x[0] > p[1]) return 0;
-    return 3*p[0] / (4 * p[1]) * sqrt(1-x[0]*x[0]/(p[1]*p[1]));
+    return p[0] * exp(- x[0]/2 / p[1]) / pow(2 * M_PI * p[1], ((double)(n))/2.);
 }
 
 REAL flattened_quad_fermi(int n, REAL* x, REAL* p){
@@ -164,5 +168,57 @@ REAL flattened_quad_fermi(int n, REAL* x, REAL* p){
         x[0] += (x[i] - p[2+i])*(x[i] - p[2+i]);
     }
 
-    return sqrt(2*M_PI*p[1]) * gsl_sf_fermi_dirac_mhalf(-(x[0]/2 - p[0]) / p[1]);
+    return sqrt(2*M_PI*p[1]) * gsl_sf_fermi_dirac_mhalf(-(x[0]/2 - p[0]) / p[1]) / (2*M_PI*p[1] * gsl_sf_fermi_dirac_0(p[0] / p[1]));
+} 
+
+REAL dirac_delta(int n, REAL* x, REAL* p){
+    int check = 1;
+    for (int i = 0; i < n; ++i){
+        if (fabs(x[i]-p[1+i])>1e-5) check = 0;
+    }
+    if (check) return p[0];
+    return 0;
+}
+
+REAL sine(int n, REAL* x, REAL* p){
+    x[0] = sin(p[2] * x[0]);
+    for(int i = 1; i < n; ++i){
+        x[0] *= sin(p[2+i] * x[i]);
+    }
+    return p[0] + p[1] * x[0];
+}
+
+REAL anisotropic_quad_maxwell(int n, REAL* x, REAL* p){
+    x[0] = (x[0] - p[n+1])*(x[0] - p[n+1])/(2 * p[1]);
+    REAL norm = sqrt(2 * M_PI * p[1]);
+    for(int i = 1; i < n; ++i){
+        x[0] += (x[i] - p[n+1+i])*(x[i] - p[n+1+i])/(2 * p[1+i]);
+        norm *= sqrt(2 * M_PI * p[1+i]);
+    }
+    
+    return p[0] * exp(- x[0] ) / norm;
+}
+
+REAL anisotropic_quad_fermi(int n, REAL* x, REAL* p){
+    x[0] = (x[0] - p[n+1])*(x[0] - p[n+1])/(2 * p[0]);
+    REAL norm = sqrt(2*M_PI*p[n] / p[0]);
+
+    for(int i = 1; i < n; ++i){
+        x[0] += (x[i] - p[n+1+i])*(x[i] - p[n+1+i])/(2 * p[i]);
+        norm *= sqrt(2*M_PI*p[n] * p[i]);
+    }
+    
+    return 1.0 / (1 + exp((x[0]-1) * p[0]/p[n])) / (norm * gsl_sf_fermi_dirac_0(p[0] / p[n]));
+}
+
+REAL anisotropic_linear_fermi(int n, REAL* x, REAL* p){ // TODO Fix vF != c //
+    x[0] = (x[0] - p[n+1])*(x[0] - p[n+1])/(p[0] * p[0]);
+    REAL norm = sqrt(2 * M_PI) * p[n] / p[0];
+    for(int i = 1; i < n; ++i){
+        x[0] += (x[i] - p[n+1+i])*(x[i] - p[n+1+i])/(p[i] * p[i]);
+        norm *= sqrt(2 * M_PI) * p[n] * p[i];
+    }
+    x[0] = sqrt(x[0]);
+    
+    return 1.0 / (1 + exp((x[0] - 1) * p[0] / p[n])) / (norm * gsl_sf_fermi_dirac_1(p[0] / p[n]));
 }

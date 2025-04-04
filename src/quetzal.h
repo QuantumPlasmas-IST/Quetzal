@@ -1,5 +1,5 @@
-#ifndef __KIPS__
-#define __KIPS__
+#ifndef __QUETZAL__
+#define __QUETZAL__
 
 #include "aux.h"
 #include "input.h"

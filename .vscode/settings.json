@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "*.m": "matlab",
+        "*.chem": "matlab",
+        "*.ini": "ini",
+        "remap3d.h": "c"
+    }
+}

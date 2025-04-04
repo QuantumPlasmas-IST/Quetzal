@@ -7,7 +7,7 @@ import scipy.optimize as opt
 import mpmath as mpm
 
 #############################
-name = 'dispersion_3DMaxwellQuadratic1'
+name = 'dispersion_2DMax'
 #############################
 
 # Allows the use of LateX notation in labels

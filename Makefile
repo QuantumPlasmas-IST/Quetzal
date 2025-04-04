@@ -6,17 +6,22 @@ SRCDIR := src
 
 CCFLAGS := -pedantic -g
 
-CC := h5pcc
-
 # Libraries
 
-# Laptop-PC
-#MISC_CLINKFLAGS = -L/usr/local/lib -lgsl -lgslcblas -lm
-#MISC_CCOMPILEFLAGS = -I/usr/local/include
+# PC
+#CC := h5pcc
+#MISC_CLINKFLAGS = -L/usr/local/lib -lgsl -lgslcblas -lm -L/home/diogo/fftMPI_source/fftmpi-master/src  -lfft3dmpi -lfft2dmpi
+#MISC_CCOMPILEFLAGS = -I/usr/local/include -I/home/diogo/fftMPI_source/fftmpi-master/src
 
-# Desktop-Mac
-MISC_CLINKFLAGS = -L/usr/lib64 -lgsl -lgslcblas -lm
-MISC_CCOMPILEFLAGS = -I/usr/include
+# Mac
+CC := h5pcc
+MISC_CLINKFLAGS = -L/usr/lib64 -lgsl -lgslcblas -lm -L/home/dsimoes/fftmpi-master/src  -lfft3dmpi -lfft2dmpi
+MISC_CCOMPILEFLAGS = -I/usr/include -I/home/dsimoes/fftmpi-master/src
+
+# Accelerates
+#CC := /data/dsimoes/HDF5_install/bin/h5pcc
+#MISC_CLINKFLAGS = -L/data/dsimoes/gsl_install/lib -lgsl -lgslcblas -lm -L/data/dsimoes/fftMPI_source/fftmpi-master/src -lfft3dmpi -lfft2dmpi
+#MISC_CCOMPILEFLAGS = -I/data/dsimoes/gsl_install/include -I/data/dsimoes/fftMPI_source/fftmpi-master/src
 
 VPATH = main:src
 
@@ -24,19 +29,19 @@ SRC := $(wildcard $(SRCDIR)/*.c)
 OBJ := $(patsubst %.c, $(BINDIR)/%.o, $(notdir $(SRC)))
 INC := $(wildcard $(SRCDIR)/*.h)
 
-lib: $(LIBDIR)/libFC.a
+lib: $(LIBDIR)/libquetzal.a
 
-$(LIBDIR)/libFC.a: $(OBJ) 
+$(LIBDIR)/libquetzal.a: $(OBJ) 
 	@echo make lib...
 	ar ruv $@ $^
 	ranlib $@
-    
-%.exe: $(BINDIR)/%.o $(LIBDIR)/libFC.a
+
+%.exe: $(BINDIR)/%.o $(LIBDIR)/libquetzal.a
 	@echo LINKING!...
-	$(CC) $(CCFLAGS) -I $(SRCDIR) $(MISC_CCOMPILEFLAGS) $< -o $(BINDIR)/$@ -L lib -lFC $(MISC_CLINKFLAGS)
+	$(CC) $(CCFLAGS) -I $(SRCDIR) $(MISC_CCOMPILEFLAGS) $< -o $(BINDIR)/$@ -L lib -lquetzal $(MISC_CLINKFLAGS)
 
 $(BINDIR)/%.o: %.c | $(INC)
-	@echo COMPILING!... $<
+	@echo COMPILING!... $< $(MPI_ROOT) $(H5_ROOT)
 	$(CC) $(CCFLAGS) -I $(SRCDIR) $(MISC_CCOMPILEFLAGS) -c $< -o $@ $(MISC_CLINKFLAGS)
 
 ######### clean

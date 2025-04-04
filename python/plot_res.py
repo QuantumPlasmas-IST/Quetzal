@@ -5,8 +5,8 @@ import h5py
 import scipy as scp
 
 #############################
-name = 'dispersion_3DMaxwellQuadratic4'
-iter = 2000
+name = 'wallTest'
+iter = 3000
 #############################
 
 # Allows the use of LateX notation in labels
@@ -14,7 +14,7 @@ plt.rcParams['text.usetex'] = True
 plt.rcParams.update({'font.size': 15})
 
 # Set the scaling for the potential and charge density plots
-scale = 1
+scale = 10
 
 def func1(x):
     return x/scale
@@ -24,8 +24,9 @@ def func2(x):
 # Reads Test_Data.h5 file in ../data/ directory
 file=h5py.File('./output/'+name+'.h5','r')
 
-positrons = file['/Species'+str(iter)][0]
-#electrons = file['/Species'+str(iter)][1]
+electrons = file['/Species'+str(iter)][0]
+#positrons = file['/Species'+str(iter)][1]
+species = electrons#+positrons
 potential = file['/Fields'+str(iter)][0]['real']
 pot_im = file['/Fields'+str(iter)][0]['imaginary']
 charge = file['/Sources'+str(iter)][0]['real']
@@ -38,13 +39,15 @@ mom_max = file.attrs['Momentum Max.'][0]
 pos_num = file.attrs['Number of Position Points'][0]
 dx = file.attrs['Position Delta'][0]
 dt = file.attrs['Time Delta']
+padding=2
 
 fig, axs = plt.subplots(layout='constrained')
-sc = plt.imshow(positrons.T, extent = (pos_min-0.05,pos_max+0.05,mom_min-0.05,mom_max+0.05), aspect='auto', origin = 'lower')
+sc = plt.imshow(species.T, extent = (pos_min,pos_max,mom_min,mom_max), aspect='auto', origin = 'lower')
 #plt.tight_layout()
 #plt.plot(np.linspace(pos_min,pos_max,pos_num), species[:,50], c='b')
-plt.scatter(np.linspace(pos_min,pos_max,pos_num), scale*potential, c='r', s=0.2)
-plt.plot(np.linspace(pos_min,pos_max,pos_num), scale*charge, c='y', linewidth=1)
+print(np.shape(species))
+#plt.plot(np.linspace(pos_min,pos_max,pos_num), potential/scale, c='r', linewidth=1)
+#plt.plot(np.linspace(pos_min,pos_max,pos_num), scale/charge, c='y', linewidth=1)
 secay = axs.secondary_yaxis('right', functions=(func1, func2))
 plt.xlabel(r"$x$ [$c \omega_{pe}^{-1}$]")
 plt.ylabel(r"$p$ [$m_e c$]")
