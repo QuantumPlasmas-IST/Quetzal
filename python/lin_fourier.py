@@ -7,10 +7,10 @@ import scipy.optimize as opt
 import mpmath as mpm
 
 #############################
-name = 'dispersion_2DFermiLinearA'
-T = 1
-u = 0.0
-wpe = np.sqrt(2)
+name = 'dispersion_2DLin'
+T = 0.05
+u = 0.05
+wpe = np.sqrt(1)
 ge = np.pi
 #############################
 
@@ -31,7 +31,7 @@ pos_min = file.attrs['Position Min.']
 pos_max = file.attrs['Position Max.']
 mom_min = file.attrs['Momentum Min.']
 mom_max = file.attrs['Momentum Max.']
-Nt = 61174#file.attrs['Number of Timesteps']
+Nt = 50000#file.attrs['Number of Timesteps']
 diag_f = file.attrs['Diagnostic Frequency']
 pos_num = file.attrs['Number of Position Points'][0]
 mom_num = file.attrs['Number of Momentum Points'][0]
@@ -101,8 +101,8 @@ sc = plt.imshow(np.log10(Sphi+1e-5), extent = (-kmax/2-dk/2,kmax/2-dk/2,-wmax/2-
 #plt.plot(qs, np.sqrt(ge * alpha * qs + 3*beta/alpha * qs**2), c = 'r')     # 2D quadratic
 plt.plot(qs, np.sqrt(ge * alpha / 2 * qs + 3/4 * qs**2), c = 'r')    # 2D linear
 plt.plot(qs, qs, c = 'g')    # Damp threshold
-plt.xlim((-10,10))
-plt.ylim((0,6))
+plt.xlim((-5,5))
+plt.ylim((0,4))
 plt.xlabel(r"$k_x$[$\omega_{pe} c^{-1}$]")
 plt.ylabel(r"$\omega$[$\omega_{pe}$]")
 plt.colorbar(sc)

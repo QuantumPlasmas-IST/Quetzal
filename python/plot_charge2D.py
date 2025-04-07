@@ -5,10 +5,10 @@ import h5py
 import scipy as scp
 
 #############################
-name = 'weibel_linBandNew2'
-iter = 400
-#name = 'weibel_linBandWall'
-#iter = 2000
+#name = 'weibel_linBandNew2'
+#iter = 1000
+name = 'weibel_linBandWall1'
+iter = 10000
 #name = 'wallTest'
 #iter = 2200
 #############################
@@ -45,6 +45,7 @@ dt = file.attrs['Time Delta']
 sc = plt.imshow(potential.T, extent = (pos_min,pos_max,mom_min,mom_max), aspect='auto', origin = 'lower')
 plt.xlabel(r"$x / a$")
 plt.ylabel(r"$y / a$") 
+plt.title("t =" + str(dt*iter))
 plt.colorbar()
 plt.tight_layout()
 plt.savefig("./img/"+name+"_charge_"+str(iter)+".png", dpi=500)

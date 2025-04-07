@@ -7,11 +7,11 @@ import scipy.optimize as opt
 import mpmath as mpm
 
 #############################
-name = 'dispersion_2DLin5'
-T = 0.1
-u = 1
+name = 'dispersion_2DLin'
+T = 0.05
+u = 0.05
 ge = np.pi
-vF=0.5
+vF=1
 
 wp2 = 1
 #############################
@@ -34,7 +34,7 @@ pos_min = file.attrs['Position Min.']
 pos_max = file.attrs['Position Max.']
 mom_min = file.attrs['Momentum Min.']
 mom_max = file.attrs['Momentum Max.']
-Nt = file.attrs['Number of Timesteps']
+Nt = 50000#file.attrs['Number of Timesteps']
 diag_f = file.attrs['Diagnostic Frequency']
 pos_num = file.attrs['Number of Position Points'][0]
 mom_num = file.attrs['Number of Momentum Points'][0]
