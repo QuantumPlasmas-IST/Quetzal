@@ -81,7 +81,7 @@ typedef struct input{
     char** field_bound_names;
     void(**pos_bounds)(struct input*, int, int*, REAL*, int);
     void(**mom_bounds)(struct input*, int, int*, REAL*, int);
-    void(**field_bounds)(struct input*, int, int*, COMPLEX*, int);
+    void(***field_bounds)(struct input*, int, int*, COMPLEX*, int);
 
     REAL** source_charges;
     REAL** force_charges;

@@ -29,10 +29,10 @@ void field_bound_cond(input_t* input, COMPLEX** fields, COMPLEX*** left_buffer, 
 
     for (int j = 0; j < input->pos_dims; ++j){
         if(input->parallel_pos[j]==0){
-            input->field_bounds[j](input, j, aux_is, fields[fld],0);
+            input->field_bounds[fld][j](input, j, aux_is, fields[fld],0);
         }
         if(input->parallel_pos[j]==input->procs[j]-1){
-            input->field_bounds[j](input, j, aux_is, fields[fld],1);
+            input->field_bounds[fld][j](input, j, aux_is, fields[fld],1);
         }
     }
 }
@@ -209,7 +209,7 @@ void field_neumann_bound(input_t* input, int dim, int* aux_is, COMPLEX* fields, 
         for(int i = 0; i < above; ++i){
             for(int k = 0; k < below; ++k){
                 for (int p = 0; p < input->padding; ++p){
-                    fields[(Nj * (i + 1) - p - 1) * below + k] = fields[(Nj * (i + 1) - input->padding) * below + k];
+                    fields[(Nj * (i + 1) - p - 1) * below + k] = fields[(Nj * (i + 1) - input->padding - 1) * below + k];
                 }
             }
         }
@@ -241,7 +241,7 @@ void field_second_bound(input_t* input, int dim, int* aux_is, COMPLEX* fields, i
         for(int i = 0; i < above; ++i){
             for(int k = 0; k < below; ++k){
                 for (int p = 0; p < input->padding; ++p){
-                    fields[(Nj * (i + 1) - p - 1) * below + k] = 2 * fields[(Nj * (i + 1) - input->padding) * below + k] - fields[(Nj * (i + 1) - input->padding - 1) * below + k];
+                    fields[(Nj * (i + 1) - p - 1) * below + k] = 2 * fields[(Nj * (i + 1) - input->padding -1 ) * below + k] - fields[(Nj * (i + 1) - input->padding - 2) * below + k];
                 }
             }
         }

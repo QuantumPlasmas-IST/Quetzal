@@ -103,18 +103,21 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
         if(!strcmp(input->pos_bound_names[i],"wall")){
             input->pos_bounds[i]=&wall_bound;
         }
+    }
 
+    for(int i = 0; i < input->pos_dims*input->n_fields; ++i){
+        //printf("%s\n",input->field_bound_names[i]);
         if(!strcmp(input->field_bound_names[i],"dirichelet")){
-            input->field_bounds[i]=&field_dirichelet_bound;
+            input->field_bounds[0][i]=&field_dirichelet_bound;
         }
         if(!strcmp(input->field_bound_names[i],"periodic")){
-            input->field_bounds[i]=&field_periodic_bound;
+            input->field_bounds[0][i]=&field_periodic_bound;
         }
         if(!strcmp(input->field_bound_names[i],"neumann")){
-            input->field_bounds[i]=&field_neumann_bound;
+            input->field_bounds[0][i]=&field_neumann_bound;
         }
         if(!strcmp(input->field_bound_names[i],"second")){
-            input->field_bounds[i]=&field_second_bound;
+            input->field_bounds[0][i]=&field_second_bound;
         }
     }
 
@@ -605,16 +608,11 @@ input_t* read_input(const char* name, int rank, int size){
             input->pos_bound_names=malloc((input->pos_dims)*sizeof(char*));
             char* aux_bound_names = calloc((input->pos_dims) * STR_SIZE, sizeof(char));
 
-            input->field_bound_names=malloc((input->pos_dims)*sizeof(char*));
-            char* aux2_bound_names = calloc((input->pos_dims) * STR_SIZE, sizeof(char));
-            
             for (int i = 0; i < input->pos_dims; ++i){
                 input->pos_bound_names[i] = aux_bound_names + i*STR_SIZE;
-                input->field_bound_names[i] = aux2_bound_names + i*STR_SIZE;
             }
 
             input->pos_bounds = malloc((input->pos_dims)*sizeof(bound_t));
-            input->field_bounds = malloc((input->pos_dims)*sizeof(fbound_t));
 
             input->procs = malloc(input->pos_dims * sizeof(int));
             input->parallel_pos = malloc(input->pos_dims * sizeof(int));
@@ -738,6 +736,21 @@ input_t* read_input(const char* name, int rank, int size){
                 for(int fld = 0; fld < input->n_fields; ++fld){
                     input->field_matrix[dim][fld] = input->field_matrix[0][0] + fld * input->n_fields + dim * input->n_fields * input->n_fields;
                 }
+            }
+
+
+            input->field_bounds = malloc((input->n_fields)*sizeof(fbound_t*));
+            input->field_bounds[0] = malloc((input->n_fields * input->pos_dims)*sizeof(fbound_t));
+
+            for(int i = 0; i < input->n_fields; ++i){
+                input->field_bounds[i] = input->field_bounds[0] + input->pos_dims * i;
+            }
+
+            input->field_bound_names=malloc((input->n_fields * input->pos_dims)*sizeof(char*));
+            char* aux2_bound_names = calloc((input->n_fields * input->pos_dims) * STR_SIZE, sizeof(char));
+            
+            for (int i = 0; i < input->pos_dims*input->n_fields; ++i){
+                input->field_bound_names[i] = aux2_bound_names + i*STR_SIZE;
             }
 
         }
@@ -895,6 +908,7 @@ void free_input(input_t* input){
 
     free(input->pos_bounds);
     free(input->mom_bounds);
+    free(input->field_bounds[0]);
     free(input->field_bounds);
 
     free(input->grid_factor);
