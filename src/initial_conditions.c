@@ -169,7 +169,17 @@ REAL flattened_quad_fermi(int n, REAL* x, REAL* p){
     }
 
     return sqrt(2*M_PI*p[1]) * gsl_sf_fermi_dirac_mhalf(-(x[0]/2 - p[0]) / p[1]) / (2*M_PI*p[1] * gsl_sf_fermi_dirac_0(p[0] / p[1]));
-} 
+}
+
+REAL plasmon_bose(int n, REAL* x, REAL* p){
+    x[0] = (x[0] - p[2])*(x[0] - p[2]);
+    for(int i = 1; i < n; ++i){
+        x[0] += (x[i] - p[2+i])*(x[i] - p[2+i]);
+    }
+    x[0] = sqrt(sqrt(x[0]));
+    
+    return 1.0 / (-1 + exp((x[0] - p[0]) / p[1]));
+}
 
 REAL dirac_delta(int n, REAL* x, REAL* p){
     int check = 1;

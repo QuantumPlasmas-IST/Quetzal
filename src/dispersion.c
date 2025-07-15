@@ -40,3 +40,18 @@ void anisotropic_quadratic_dispersion(int pos_dims, int mom_dims, REAL* p){
     p[1] /= 5.;
 
 }
+
+void plasmon_dispersion(int pos_dims, int mom_dims, REAL* p){
+    
+    REAL total_p = 0;
+
+    for(int i = 0; i < mom_dims; ++i){
+        total_p += p[i]*p[i];
+    }
+    total_p = sqrt(sqrt(total_p));
+    total_p = 2*total_p*total_p*total_p;
+
+    for(int i = 0; i < pos_dims; ++i){
+        p[i] = p[i] / total_p;
+    }
+}

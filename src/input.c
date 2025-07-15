@@ -218,6 +218,9 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
         if(!strcmp(input->dispersion_names[i],"anisotropic quadratic")){
             input->dispersions[i]=&anisotropic_quadratic_dispersion;
         }
+        if(!strcmp(input->dispersion_names[i],"plasmon")){
+            input->dispersions[i]=&plasmon_dispersion;
+        }
 
         // Position Initial Conditions
         if(!strcmp(input->pos_init_names[i],"gaussian")){
@@ -329,6 +332,13 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
         }
         if(!strcmp(input->mom_init_names[i],"quadratic bose")){
             input->mom_inits[i]=&quad_bose;
+            for (int j = 0; j < 2+input->mom_dims; ++j){
+                input->mom_init_params[i][j]=mom_parameters[mom_param_count];
+                mom_param_count++;
+            }
+        }
+        if(!strcmp(input->mom_init_names[i],"plasmon bose")){
+            input->mom_inits[i]=&plasmon_bose;
             for (int j = 0; j < 2+input->mom_dims; ++j){
                 input->mom_init_params[i][j]=mom_parameters[mom_param_count];
                 mom_param_count++;

@@ -19,6 +19,7 @@ REAL linear_fermi(int n, REAL* x, REAL* p);
 REAL quad_fermi(int n, REAL* x, REAL* p);
 REAL linear_bose(int n, REAL* x, REAL* p);
 REAL quad_bose(int n, REAL* x, REAL* p);
+REAL plasmon_bose(int n, REAL* x, REAL* p);
 REAL linear_maxwell(int n, REAL* x, REAL* p);
 REAL quad_maxwell(int n, REAL* x, REAL* p);
 REAL double_quad_maxwell(int n, REAL* x, REAL* p);
