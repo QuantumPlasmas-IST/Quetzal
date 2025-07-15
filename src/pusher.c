@@ -540,7 +540,7 @@ void rungeKutta2(input_t* input, REAL** species, REAL** species_aux, COMPLEX** s
     }
     for(int fld = 0; fld < input->n_fields; ++fld){
         if(!strcmp(input->field_type[fld],"dynamic")){
-            finite_volume1_fields(input, fields, fields_deriv, fields_fft, fld);
+            finite_volume2_fields(input, fields, fields_deriv, fields_fft, fld);
         }
     }
     for(int fld = 0; fld < input->n_fields; ++fld){
@@ -587,7 +587,7 @@ void rungeKutta2(input_t* input, REAL** species, REAL** species_aux, COMPLEX** s
     }
     for(int fld = 0; fld < input->n_fields; ++fld){
         if(!strcmp(input->field_type[fld],"dynamic")){
-            finite_volume1_fields(input, fields_aux, fields_deriv, fields_fft, fld);
+            finite_volume2_fields(input, fields_aux, fields_deriv, fields_fft, fld);
         }
     }
     for(int fld = 0; fld < input->n_fields; ++fld){
