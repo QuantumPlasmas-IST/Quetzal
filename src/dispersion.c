@@ -16,18 +16,15 @@ void linear_dispersion(int pos_dims, int mom_dims, REAL* p){
 
 void anisotropic_linear_dispersion(int pos_dims, int mom_dims, REAL* p){
 
-    REAL total_p = 0;
-
-    for(int i = 0; i < mom_dims; ++i){
-        total_p += p[i]*p[i];
-    }
+    REAL total_p = p[0]*p[0];
+    total_p += p[1]*p[1]/9.;
     total_p = sqrt(total_p);
 
     for(int i = 0; i < pos_dims; ++i){
         p[i] = p[i] / total_p;
     }
 
-    p[1] /= 5.;
+    p[1] /= 9.;
 }
 
 // Yes, it's supposed to do nothing
