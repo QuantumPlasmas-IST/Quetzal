@@ -1,6 +1,6 @@
 #include "force.h"
 
-REAL gradient_force(input_t* input, COMPLEX** fields, int fld, int j, int k, int dim){
+__host__ __device__ REAL gradient_force(input_t* input, COMPLEX** fields, int fld, int j, int k, int dim){
 
     if(dim>=input->pos_dims) return 0;
     
@@ -9,19 +9,19 @@ REAL gradient_force(input_t* input, COMPLEX** fields, int fld, int j, int k, int
     return - (forw - back) / (2 * input->pos_delta[dim]);
 }
 
-REAL electric0_force(input_t* input, COMPLEX** fields, int fld, int j, int k, int dim){
+__host__ __device__ REAL electric0_force(input_t* input, COMPLEX** fields, int fld, int j, int k, int dim){
     
     return (1-dim) * creal(fields[fld][j]);
 
 }
 
-REAL electric1_force(input_t* input, COMPLEX** fields, int fld, int j, int k, int dim){
+__host__ __device__ REAL electric1_force(input_t* input, COMPLEX** fields, int fld, int j, int k, int dim){
     
     return dim * creal(fields[fld][j]);
 
 }
 
-REAL magnetic_force(input_t* input, COMPLEX** fields, int fld, int j, int k, int dim){
+__host__ __device__ REAL magnetic_force(input_t* input, COMPLEX** fields, int fld, int j, int k, int dim){
 
     //TODO Check this carefully
     int mom_index = dim * (k/input->mom_points[0]) + (1-dim) * (k%input->mom_points[0]);

@@ -2,9 +2,9 @@
 
 void apply_init_cond(input_t* input, REAL** species){
 
-    int* indices = malloc((input->pos_dims + input->mom_dims) * sizeof(int));
-    REAL* positions = malloc(input->pos_dims * sizeof(REAL));
-    REAL* momenta = malloc(input->mom_dims * sizeof(REAL));
+    int* indices = (int*)malloc((input->pos_dims + input->mom_dims) * sizeof(int));
+    REAL* positions = (REAL*)malloc(input->pos_dims * sizeof(REAL));
+    REAL* momenta = (REAL*)malloc(input->mom_dims * sizeof(REAL));
 
     for (int i = 0; i < input->n_species; ++i){
         for (int j = 0; j < input->pos_total * input->mom_total; ++j){
@@ -32,8 +32,8 @@ void apply_init_cond(input_t* input, REAL** species){
 
 void field_init_cond(input_t* input, COMPLEX** fields){
 
-    int* indices = malloc(input->pos_dims * sizeof(int));
-    REAL* positions = malloc(input->pos_dims * sizeof(REAL));
+    int* indices = (int*)malloc(input->pos_dims * sizeof(int));
+    REAL* positions = (REAL*)malloc(input->pos_dims * sizeof(REAL));
 
     for (int i = 0; i < input->n_fields; ++i){
         for (int j = 0; j < input->pos_total; ++j){

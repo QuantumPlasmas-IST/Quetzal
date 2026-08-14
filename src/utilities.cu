@@ -1,19 +1,19 @@
 #include "utilities.h"
 
-int factorial(int n){
+__host__ __device__ int factorial(int n){
     if(!n) return 1;
     return n*factorial(n-1);
 }
 
-int binomial_coeff(int n, int m){
+__host__ __device__ int binomial_coeff(int n, int m){
     return factorial(n)/(factorial(m)*factorial(n-m));
 }
 
-int ipow(int base, int exp){
+__host__ __device__ int ipow(int base, int exp){
     return ((int)(pow(base,exp)));
 }
 
-int* list_combinations(int n, int m, int* list, int k){
+__host__ __device__ int* list_combinations(int n, int m, int* list, int k){
     
     if(!m) return list;
 
@@ -44,11 +44,11 @@ int* list_combinations(int n, int m, int* list, int k){
 
 }
 
-int* list_combinations_all(int n, int m, int* list, int k){
+__host__ __device__ int* list_combinations_all(int n, int m, int* list, int k){
 
     list_combinations(n, m, list, k);
 
-    int* aux_list = malloc(n * sizeof(int));
+    int* aux_list = (int*)malloc(n * sizeof(int));
 
     for (int i = 0; i < n; ++i){
         aux_list[i] = i;
@@ -70,7 +70,7 @@ int* list_combinations_all(int n, int m, int* list, int k){
     return list;
 }
 
-int list_index(int n_dims, int* Ns, int* is){
+__host__ __device__ int list_index(int n_dims, int* Ns, int* is){
 
     int res = 0;
 
@@ -97,7 +97,7 @@ void axis_index(int n_dims, int* Ns, int* is, int index){
 
 }
 
-REAL minmod3(REAL x1, REAL x2, REAL x3){
+__host__ __device__ REAL minmod3(REAL x1, REAL x2, REAL x3){
     if(x1*x2 < 0) return 0;
     if(x1*x3 < 0) return 0;
     if(fabs(x1) < fabs(x2)){
@@ -108,7 +108,7 @@ REAL minmod3(REAL x1, REAL x2, REAL x3){
     return x3;
 }
 
-REAL maxmod3(REAL x1, REAL x2, REAL x3){
+__host__ __device__ REAL maxmod3(REAL x1, REAL x2, REAL x3){
     if(x1*x2 < 0) return 0;
     if(x1*x3 < 0) return 0;
     if(fabs(x1) > fabs(x2)){
@@ -119,29 +119,29 @@ REAL maxmod3(REAL x1, REAL x2, REAL x3){
     return x3;
 }
 
-REAL minmod2(REAL x1, REAL x2){
+__host__ __device__ REAL minmod2(REAL x1, REAL x2){
     if(x1*x2<0) return 0;
     if(fabs(x1) < fabs(x2)) return x1;
     return x2;
 }
 
-REAL maxmod2(REAL x1, REAL x2){
+__host__ __device__ REAL maxmod2(REAL x1, REAL x2){
     if(x1*x2<0) return 0;
     if(fabs(x1) < fabs(x2)) return x2;
     return x1;
 }
 
-REAL min2(REAL x1, REAL x2){
+__host__ __device__ REAL min2(REAL x1, REAL x2){
     if(x1 < x2) return x1;
     return x2;
 }
 
-REAL max2(REAL x1, REAL x2){
+__host__ __device__ REAL max2(REAL x1, REAL x2){
     if(x1 < x2) return x2;
     return x1;
 }
 
-REAL min3(REAL x1, REAL x2, REAL x3){
+__host__ __device__ REAL min3(REAL x1, REAL x2, REAL x3){
     if(x1 < x2){
         if(x1 < x3) return x1;
         return x3;
@@ -150,7 +150,7 @@ REAL min3(REAL x1, REAL x2, REAL x3){
     return x3;
 }
 
-REAL max3(REAL x1, REAL x2, REAL x3){
+__host__ __device__ REAL max3(REAL x1, REAL x2, REAL x3){
     if(x1 > x2){
         if(x1 > x3) return x1;
         return x3;
@@ -159,38 +159,38 @@ REAL max3(REAL x1, REAL x2, REAL x3){
     return x3;
 }
 
-REAL minmod_slopeLimiter(REAL u0, REAL u1, REAL u2, REAL Dx){
+__host__ __device__ REAL minmod_slopeLimiter(REAL u0, REAL u1, REAL u2, REAL Dx){
     return minmod2((u2-u1)/Dx, (u1-u0)/Dx);
 }
 
-REAL superbee_slopeLimiter(REAL u0, REAL u1, REAL u2, REAL Dx){
+__host__ __device__ REAL superbee_slopeLimiter(REAL u0, REAL u1, REAL u2, REAL Dx){
     return maxmod2(minmod2(2 * (u1 - u0)/Dx, (u2 - u1)/Dx), minmod2((u1 - u0)/Dx, 2 * (u2 - u1)/Dx));
 }
 
-REAL MC_slopeLimiter(REAL u0, REAL u1, REAL u2, REAL Dx){
+__host__ __device__ REAL MC_slopeLimiter(REAL u0, REAL u1, REAL u2, REAL Dx){
     return minmod3(2 * (u2 - u1)/Dx, (u2 - u1)/(2 * Dx), 2 * (u1 - u0)/Dx);
 }
 
-REAL vanLeer_slopeLimiter(REAL u0, REAL u1, REAL u2, REAL Dx){
+__host__ __device__ REAL vanLeer_slopeLimiter(REAL u0, REAL u1, REAL u2, REAL Dx){
     REAL r = (u2-u1)/(u1-u0);
     return (r+fabs(r))/(1+fabs(r));
 }
 
-REAL minmod_fluxLimiter(REAL u0, REAL u1, REAL u2){
+__host__ __device__ REAL minmod_fluxLimiter(REAL u0, REAL u1, REAL u2){
     return minmod2(1, (u1-u0)/(u2-u1));
 }
 
-REAL superbee_fluxLimiter(REAL u0, REAL u1, REAL u2){
+__host__ __device__ REAL superbee_fluxLimiter(REAL u0, REAL u1, REAL u2){
     REAL theta = (u1-u0)/(u2-u1);
     return max3(0, min2(1, 2*theta), min2(2, theta));
 }
 
-REAL MC_fluxLimiter(REAL u0, REAL u1, REAL u2){
+__host__ __device__ REAL MC_fluxLimiter(REAL u0, REAL u1, REAL u2){
     REAL theta = (u1-u0)/(u2-u1);
     return max2(0, min3((1+theta)/2, 2, 2*theta));
 }
 
-REAL vanLeer_fluxLimiter(REAL u0, REAL u1, REAL u2){
+__host__ __device__ REAL vanLeer_fluxLimiter(REAL u0, REAL u1, REAL u2){
     REAL theta = (u1-u0)/(u2-u1);
     return (theta+fabs(theta))/(1+fabs(theta));
 }

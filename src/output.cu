@@ -71,7 +71,7 @@ void open_file(input_t* input){
     status = H5Awrite(attribute_id, H5T_NATIVE_INT, &(input->n_species));
     status = H5Aclose(attribute_id);
 
-    REAL* pmax = malloc(input->pos_dims * sizeof(REAL));
+    REAL* pmax = (REAL*)malloc(input->pos_dims * sizeof(REAL));
     for(int i = 0; i < input->pos_dims; ++i){
         pmax[i] = input->pos_min[i] - input->parallel_pos[i]*(input->pos_points[i]-2*input->padding)*input->pos_delta[i];
     }
@@ -106,7 +106,7 @@ void open_file(input_t* input){
     status = H5Awrite(attribute_id, H5T_NATIVE_REAL, input->mom_delta);
     status = H5Aclose(attribute_id);
 
-    int* pps = malloc(input->pos_dims * sizeof(int));
+    int* pps = (int*)malloc(input->pos_dims * sizeof(int));
     for(int i = 0; i < input->pos_dims; ++i){
         pps[i] = (input->pos_points[i] - 2*input->padding) * input->procs[i];
     }
@@ -144,7 +144,7 @@ void open_file(input_t* input){
     status = H5Aclose(attribute_id);
 
     attribute_id = H5Acreate (file_id, "Space-discretization algorithm", H5T_NATIVE_CHAR, string_scalar_dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
-    status = H5Awrite(attribute_id, H5T_NATIVE_CHAR, input->operator);
+    status = H5Awrite(attribute_id, H5T_NATIVE_CHAR, input->push_operator);
     status = H5Aclose(attribute_id);
 
     attribute_id = H5Acreate (file_id, "Position Initial Condition Functions", H5T_NATIVE_CHAR, string_pos_dims_dataspace_id, H5P_DEFAULT, H5P_DEFAULT);
@@ -228,7 +228,7 @@ void write_solution(input_t* input, REAL** results, REAL** aux, int* indices, in
     }
 
     // Create parallel access to file and dataset
-    char* name = malloc(50);
+    char* name = (char*)malloc(50);
     sprintf(name, "/Species%d", timestep);
 
     hsize_t dims[1+input->pos_dims+input->mom_dims];
@@ -323,7 +323,7 @@ void write_fields(input_t* input, COMPLEX** fields, COMPLEX** aux, int* indices,
     }
 
     // Create parallel access to file and dataset
-    char* name = malloc(50);
+    char* name = (char*)malloc(50);
     sprintf(name, "/Fields%d", timestep);
 
     hsize_t dims[1+input->pos_dims];
@@ -409,7 +409,7 @@ void write_sources(input_t* input, COMPLEX** sources, COMPLEX** aux, int* indice
     }
 
     // Create parallel access to file and dataset
-    char* name = malloc(50);
+    char* name = (char*)malloc(50);
     sprintf(name, "/Sources%d", timestep);
 
     hsize_t dims[1+input->pos_dims];

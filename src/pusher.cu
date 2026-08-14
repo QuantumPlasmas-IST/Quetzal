@@ -5,9 +5,9 @@ REAL** solve(input_t* input){
     // Setting up MPI-FFT //
 
     // Sizes and ranges of axes for each process
-    int* fft_ns = malloc(sizeof(int) * input->pos_dims);
-    int* fft_hi = malloc(sizeof(int) * input->pos_dims);
-    int* fft_lo = malloc(sizeof(int) * input->pos_dims);
+    int* fft_ns = (int*)malloc(sizeof(int) * input->pos_dims);
+    int* fft_hi = (int*)malloc(sizeof(int) * input->pos_dims);
+    int* fft_lo = (int*)malloc(sizeof(int) * input->pos_dims);
     
     int fftsize,sendsize,recvsize;
     int pos_size = input->pos_total;
@@ -42,53 +42,53 @@ REAL** solve(input_t* input){
 
     // Allocating all the memory //
 
-    REAL** species = malloc(input->n_species * sizeof(REAL*));
-    REAL** species_aux = malloc(input->n_species * sizeof(REAL*));
+    REAL** species = (REAL**)malloc(input->n_species * sizeof(REAL*));
+    REAL** species_aux = (REAL**)malloc(input->n_species * sizeof(REAL*));
 
-    COMPLEX** fields = malloc(input->n_fields * sizeof(COMPLEX*));
-    COMPLEX** fields_aux = malloc(input->n_fields * sizeof(COMPLEX*));
-    COMPLEX** fields_deriv = malloc(input->n_fields * sizeof(COMPLEX*));
-    COMPLEX** fields_fft = malloc(input->n_fields * sizeof(COMPLEX*));
+    COMPLEX** fields = (COMPLEX**)malloc(input->n_fields * sizeof(COMPLEX*));
+    COMPLEX** fields_aux = (COMPLEX**)malloc(input->n_fields * sizeof(COMPLEX*));
+    COMPLEX** fields_deriv = (COMPLEX**)malloc(input->n_fields * sizeof(COMPLEX*));
+    COMPLEX** fields_fft = (COMPLEX**)malloc(input->n_fields * sizeof(COMPLEX*));
 
-    COMPLEX** sources = malloc(input->n_species * (1+input->mom_dims) * sizeof(COMPLEX*));
-    COMPLEX** sources_aux = malloc(input->n_species * (1+input->mom_dims) * sizeof(COMPLEX*));
+    COMPLEX** sources = (COMPLEX**)malloc(input->n_species * (1+input->mom_dims) * sizeof(COMPLEX*));
+    COMPLEX** sources_aux = (COMPLEX**)malloc(input->n_species * (1+input->mom_dims) * sizeof(COMPLEX*));
 
-    REAL*** flows = malloc(input->n_species * sizeof(REAL**));
+    REAL*** flows = (REAL***)malloc(input->n_species * sizeof(REAL**));
 
-    REAL*** left_ghost_buffer = malloc(input->pos_dims * sizeof(REAL**));
-    REAL*** right_ghost_buffer = malloc(input->pos_dims * sizeof(REAL**));
+    REAL*** left_ghost_buffer = (REAL***)malloc(input->pos_dims * sizeof(REAL**));
+    REAL*** right_ghost_buffer = (REAL***)malloc(input->pos_dims * sizeof(REAL**));
 
-    COMPLEX*** left_field_buffer = malloc(input->pos_dims * sizeof(COMPLEX**));
-    COMPLEX*** right_field_buffer = malloc(input->pos_dims * sizeof(COMPLEX**));
+    COMPLEX*** left_field_buffer = (COMPLEX***)malloc(input->pos_dims * sizeof(COMPLEX**));
+    COMPLEX*** right_field_buffer = (COMPLEX***)malloc(input->pos_dims * sizeof(COMPLEX**));
         
     for(int i = 0; i < input->pos_dims; ++i){
 
         int buffer_size = input->pos_total*input->mom_total / input->pos_points[i];
         int buffer_size2 = input->pos_total / input->pos_points[i];
 
-        left_ghost_buffer[i]   =  malloc(input->padding * sizeof(REAL*));
-        right_ghost_buffer[i]  =  malloc(input->padding * sizeof(REAL*));
-        left_field_buffer[i]   =  malloc(input->padding * sizeof(COMPLEX*));
-        right_field_buffer[i]  =  malloc(input->padding * sizeof(COMPLEX*));
+        left_ghost_buffer[i]   =  (REAL**)malloc(input->padding * sizeof(REAL*));
+        right_ghost_buffer[i]  =  (REAL**)malloc(input->padding * sizeof(REAL*));
+        left_field_buffer[i]   =  (COMPLEX**)malloc(input->padding * sizeof(COMPLEX*));
+        right_field_buffer[i]  =  (COMPLEX**)malloc(input->padding * sizeof(COMPLEX*));
 
         for(int p = 0; p < input->padding; ++p){
-            left_ghost_buffer[i][p]   =  malloc(buffer_size * sizeof(REAL));
-            right_ghost_buffer[i][p]  =  malloc(buffer_size * sizeof(REAL));
-            left_field_buffer[i][p]   =  malloc(buffer_size * sizeof(COMPLEX));
-            right_field_buffer[i][p]  =  malloc(buffer_size * sizeof(COMPLEX));
+            left_ghost_buffer[i][p]   =  (REAL*)malloc(buffer_size * sizeof(REAL));
+            right_ghost_buffer[i][p]  =  (REAL*)malloc(buffer_size * sizeof(REAL));
+            left_field_buffer[i][p]   =  (COMPLEX*)malloc(buffer_size * sizeof(COMPLEX));
+            right_field_buffer[i][p]  =  (COMPLEX*)malloc(buffer_size * sizeof(COMPLEX));
         }
     }
 
-    species[0] = malloc(input->n_species * input->pos_total * input->mom_total * sizeof(REAL));
-    species_aux[0] = malloc(input->n_species * input->pos_total * input->mom_total * sizeof(REAL));
+    species[0] = (REAL*)malloc(input->n_species * input->pos_total * input->mom_total * sizeof(REAL));
+    species_aux[0] = (REAL*)malloc(input->n_species * input->pos_total * input->mom_total * sizeof(REAL));
 
-    sources[0] = malloc(input->n_species * (1+input->mom_dims) * pos_size * sizeof(COMPLEX));
-    sources_aux[0] = malloc(input->n_species * (1+input->mom_dims) * pos_size * sizeof(COMPLEX));
+    sources[0] = (COMPLEX*)malloc(input->n_species * (1+input->mom_dims) * pos_size * sizeof(COMPLEX));
+    sources_aux[0] = (COMPLEX*)malloc(input->n_species * (1+input->mom_dims) * pos_size * sizeof(COMPLEX));
     
-    fields[0] = malloc(input->n_fields * pos_size * sizeof(COMPLEX));
-    fields_aux[0] = malloc(input->n_fields * pos_size * sizeof(COMPLEX));
-    fields_deriv[0] = malloc(input->n_fields * pos_size * sizeof(COMPLEX));
-    fields_fft[0] = malloc(input->n_fields * pos_size * sizeof(COMPLEX));
+    fields[0] = (COMPLEX*)malloc(input->n_fields * pos_size * sizeof(COMPLEX));
+    fields_aux[0] = (COMPLEX*)malloc(input->n_fields * pos_size * sizeof(COMPLEX));
+    fields_deriv[0] = (COMPLEX*)malloc(input->n_fields * pos_size * sizeof(COMPLEX));
+    fields_fft[0] = (COMPLEX*)malloc(input->n_fields * pos_size * sizeof(COMPLEX));
 
     for (int i = 0; i < input->n_species; ++i){
         species[i] = species[0] + i * input->pos_total * input->mom_total;
@@ -99,9 +99,9 @@ REAL** solve(input_t* input){
             sources_aux[i * (1+input->mom_dims) + d] = sources_aux[0] + (i * (1+input->mom_dims) + d) * pos_size;
         }
     
-        flows[i] = malloc((input->pos_dims + input->mom_dims) * sizeof(REAL*));
+        flows[i] = (REAL**)malloc((input->pos_dims + input->mom_dims) * sizeof(REAL*));
         for(int dim = 0; dim < input->pos_dims+input->mom_dims; ++dim){
-            flows[i][dim] = malloc((input->pos_total * input->mom_total) * sizeof(REAL));
+            flows[i][dim] = (REAL*)malloc((input->pos_total * input->mom_total) * sizeof(REAL));
         }
     }
 
@@ -112,8 +112,8 @@ REAL** solve(input_t* input){
         fields_fft[i] = fields_fft[0] + i * pos_size;
     }
 
-    int* is = malloc(sizeof(int) * (input->pos_dims+input->mom_dims));
-    REAL* aux_momentum = malloc((input->pos_dims+input->mom_dims) * sizeof(REAL));
+    int* is = (int*)malloc(sizeof(int) * (input->pos_dims+input->mom_dims));
+    REAL* aux_momentum = (REAL*)malloc((input->pos_dims+input->mom_dims) * sizeof(REAL));
 
     // Applying initial and boundary conditions conditions //
 
@@ -202,7 +202,7 @@ REAL** solve(input_t* input){
 
 void leapfrog(input_t* input, REAL** species, REAL** aux1, REAL** aux2, COMPLEX**fields, int* aux_is){
 
-    REAL* momentum = malloc(input->mom_dims * sizeof(REAL));
+    REAL* momentum = (REAL*)malloc(input->mom_dims * sizeof(REAL));
 
     for(int i = 0; i < input->n_species; ++i){
         for(int k = 0; k < input->mom_total; ++k){

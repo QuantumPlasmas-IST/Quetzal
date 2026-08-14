@@ -1,3 +1,5 @@
+// Quetzal Kinetic Simulation
+
 #include "quetzal.h"
 
 void quetzal(const char* filename){

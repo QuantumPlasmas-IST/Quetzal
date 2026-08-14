@@ -14,6 +14,7 @@
 #include "fft2d_wrap.h"
 #include "remap3d_wrap.h"
 #include "remap2d_wrap.h"
+#include "cuComplex.h"
 
 typedef void(*disp_t)(int, int, REAL*); // type: pointer to dispersion relation (band) function
 
@@ -56,7 +57,7 @@ typedef struct input{
     disp_t* dispersions;
 
     char* pusher;
-    char* operator;
+    char* push_operator;
     
     char** kernel_names;
     kernel_t* kernels;

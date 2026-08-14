@@ -21,9 +21,9 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
 
     axis_index(input->pos_dims, input->procs, input->parallel_pos, input->rank);
 
-    input->pos_delta = malloc(input->pos_dims * sizeof(REAL));
-    input->mom_delta = malloc(input->mom_dims * sizeof(REAL));
-    input->dk = malloc(input->pos_dims * sizeof(REAL));
+    input->pos_delta = (REAL*)malloc(input->pos_dims * sizeof(REAL));
+    input->mom_delta = (REAL*)malloc(input->mom_dims * sizeof(REAL));
+    input->dk = (REAL*)malloc(input->pos_dims * sizeof(REAL));
     for(int i = 0; i < input->pos_dims; ++i){
         input->pos_delta[i] = (input->pos_max[i]-input->pos_min[i])/input->pos_points[i];
         input->dk[i] = 2 * M_PI / (input->pos_max[i]-input->pos_min[i]);
@@ -38,7 +38,7 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
         input->mom_points[i] += 2 * input->padding;
     }
 
-    int* aux_points = malloc((input->pos_dims + input->mom_dims) * sizeof(int));
+    int* aux_points = (int*)malloc((input->pos_dims + input->mom_dims) * sizeof(int));
     for(int i = 0; i < input->pos_dims; ++i){
         aux_points[i] = input->pos_points[i];
     }
@@ -46,8 +46,8 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
         aux_points[input->pos_dims+i] = input->mom_points[i];
     }
 
-    REAL* aux_delta = malloc((input->pos_dims + input->mom_dims) * sizeof(REAL));
-    input->lambda = malloc((input->pos_dims + input->mom_dims) * sizeof(REAL));
+    REAL* aux_delta = (REAL*)malloc((input->pos_dims + input->mom_dims) * sizeof(REAL));
+    input->lambda = (REAL*)malloc((input->pos_dims + input->mom_dims) * sizeof(REAL));
     for(int i = 0; i < input->pos_dims; ++i){
         aux_delta[i] = input->pos_delta[i];
         input->lambda[i] = input->deltaT/aux_delta[i];
@@ -75,8 +75,8 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
     }
 
     REAL factor = input->pos_total*input->mom_total;
-    input->grid_factor = malloc((input->pos_dims + input->mom_dims) * sizeof(int));
-    input->space_factor = malloc(input->pos_dims * sizeof(int));
+    input->grid_factor = (int*)malloc((input->pos_dims + input->mom_dims) * sizeof(int));
+    input->space_factor = (int*)malloc(input->pos_dims * sizeof(int));
     for (int i = 0; i < input->pos_dims+input->mom_dims; ++i){
         factor /= input->pos_points[i];
         input->grid_factor[i] = factor;
@@ -391,7 +391,7 @@ void initialize_input(input_t* input, REAL* pos_parameters, REAL* mom_parameters
 
 input_t* read_input(const char* name, int rank, int size){
     
-    input_t* input = malloc(sizeof(input_t));
+    input_t* input = (input_t*)malloc(sizeof(input_t));
 
     input->rank = rank;
     input->size = size;
@@ -399,7 +399,7 @@ input_t* read_input(const char* name, int rank, int size){
     input->parallel_pos = NULL;
     input->parallel_factor = NULL;
 
-    input->filename = malloc(200);
+    input->filename = (char*)malloc(200);
     input->pos_dims = 0;
     input->mom_dims = 0;
     input->pos_points = NULL;
@@ -417,8 +417,8 @@ input_t* read_input(const char* name, int rank, int size){
     input->n_timesteps = 0;
     input->dispersion_names = NULL;
     input->dispersions = NULL;
-    input->pusher = calloc(STR_SIZE, sizeof(char));
-    input->operator = calloc(STR_SIZE, sizeof(char));
+    input->pusher = (char*)calloc(STR_SIZE, sizeof(char));
+    input->push_operator = (char*)calloc(STR_SIZE, sizeof(char));
     input->kernel_names = NULL;
     input->kernels = NULL;
     input->force_names = NULL;
@@ -609,74 +609,74 @@ input_t* read_input(const char* name, int rank, int size){
 
             input->pos_dims = atoi(num_part);
 
-            input->pos_min=malloc((input->pos_dims)*sizeof(REAL));
-            input->pos_max=malloc((input->pos_dims)*sizeof(REAL));
+            input->pos_min=(REAL*)malloc((input->pos_dims)*sizeof(REAL));
+            input->pos_max=(REAL*)malloc((input->pos_dims)*sizeof(REAL));
 
-            input->pos_points=malloc((input->pos_dims)*sizeof(int));
-            input->fft_points=malloc((input->pos_dims)*sizeof(int));
+            input->pos_points=(int*)malloc((input->pos_dims)*sizeof(int));
+            input->fft_points=(int*)malloc((input->pos_dims)*sizeof(int));
 
-            input->pos_bound_names=malloc((input->pos_dims)*sizeof(char*));
-            char* aux_bound_names = calloc((input->pos_dims) * STR_SIZE, sizeof(char));
+            input->pos_bound_names=(char**)malloc((input->pos_dims)*sizeof(char*));
+            char* aux_bound_names = (char*)calloc((input->pos_dims) * STR_SIZE, sizeof(char));
 
             for (int i = 0; i < input->pos_dims; ++i){
                 input->pos_bound_names[i] = aux_bound_names + i*STR_SIZE;
             }
 
-            input->pos_bounds = malloc((input->pos_dims)*sizeof(bound_t));
+            input->pos_bounds = (bound_t*)malloc((input->pos_dims)*sizeof(bound_t));
 
-            input->procs = malloc(input->pos_dims * sizeof(int));
-            input->parallel_pos = malloc(input->pos_dims * sizeof(int));
-            input->parallel_factor = malloc(input->pos_dims * sizeof(int));
+            input->procs = (int*)malloc(input->pos_dims * sizeof(int));
+            input->parallel_pos = (int*)malloc(input->pos_dims * sizeof(int));
+            input->parallel_factor = (int*)malloc(input->pos_dims * sizeof(int));
 
-            input->field_matrix = malloc(input->pos_dims * sizeof(REAL**));
+            input->field_matrix = (REAL***)malloc(input->pos_dims * sizeof(REAL**));
         }
 
         if(!strcmp(txt_part,"MOM_DIMS")){
             
             input->mom_dims = atoi(num_part);
 
-            input->mom_min=malloc((input->mom_dims)*sizeof(REAL));
-            input->mom_max=malloc((input->mom_dims)*sizeof(REAL));
+            input->mom_min=(REAL*)malloc((input->mom_dims)*sizeof(REAL));
+            input->mom_max=(REAL*)malloc((input->mom_dims)*sizeof(REAL));
 
-            input->mom_points=malloc((input->mom_dims)*sizeof(int));
+            input->mom_points=(int*)malloc((input->mom_dims)*sizeof(int));
 
-            input->mom_bound_names=malloc((input->mom_dims)*sizeof(char*));
-            char* aux_bound_names = calloc((input->mom_dims) * STR_SIZE, sizeof(char));
+            input->mom_bound_names=(char**)((input->mom_dims)*sizeof(char*));
+            char* aux_bound_names = (char*)calloc((input->mom_dims) * STR_SIZE, sizeof(char));
 
             for (int i = 0; i < input->mom_dims; ++i){
                 input->mom_bound_names[i] = aux_bound_names + i*STR_SIZE;
             }
 
-            input->mom_bounds = malloc((input->mom_dims)*sizeof(bound_t));
+            input->mom_bounds = (bound_t*)malloc((input->mom_dims)*sizeof(bound_t));
         }
 
         if(!strcmp(txt_part,"N_SPECIES")){
             
             input->n_species = atoi(num_part);
 
-            input->dispersion_names = malloc(input->n_species * sizeof(char*));
+            input->dispersion_names = (char**)malloc(input->n_species * sizeof(char*));
             for (int i = 0; i < input->n_species; ++i){
-                input->dispersion_names[i] = calloc(STR_SIZE, sizeof(char));
+                input->dispersion_names[i] = (char*)calloc(STR_SIZE, sizeof(char));
             } 
 
-            input->dispersions = malloc((input->n_species)*sizeof(disp_t));
+            input->dispersions = (disp_t*)malloc((input->n_species)*sizeof(disp_t));
 
-            input->force_charges = malloc(input->n_species * sizeof(REAL*));
-            input->source_charges = malloc(input->n_species * sizeof(REAL*));
-            input->source_moments = malloc(input->n_species * sizeof(int*));
+            input->force_charges = (REAL**)malloc(input->n_species * sizeof(REAL*));
+            input->source_charges = (REAL**)malloc(input->n_species * sizeof(REAL*));
+            input->source_moments = (int**)malloc(input->n_species * sizeof(int*));
 
-            input->pos_init_names=malloc((input->n_species)*sizeof(char*));
-            input->mom_init_names=malloc((input->n_species)*sizeof(char*));
-            char* aux_pos_init_names = calloc((input->n_species) * STR_SIZE, sizeof(char));
-            char* aux_mom_init_names = calloc((input->n_species) * STR_SIZE, sizeof(char));
+            input->pos_init_names=(char**)malloc((input->n_species)*sizeof(char*));
+            input->mom_init_names=(char**)malloc((input->n_species)*sizeof(char*));
+            char* aux_pos_init_names = (char*)calloc((input->n_species) * STR_SIZE, sizeof(char));
+            char* aux_mom_init_names = (char*)calloc((input->n_species) * STR_SIZE, sizeof(char));
 
 
-            pos_parameters = malloc(input->n_species * NPARAMS * sizeof(REAL));
-            mom_parameters = malloc(input->n_species * NPARAMS * sizeof(REAL));
-            input->pos_init_params = malloc((input->n_species)*sizeof(REAL*));
-            input->mom_init_params = malloc((input->n_species)*sizeof(REAL*));
-            REAL* aux_pos_init_params = calloc(input->n_species * NPARAMS, sizeof(REAL));
-            REAL* aux_mom_init_params = calloc(input->n_species * NPARAMS, sizeof(REAL));
+            pos_parameters = (REAL*)malloc(input->n_species * NPARAMS * sizeof(REAL));
+            mom_parameters = (REAL*)malloc(input->n_species * NPARAMS * sizeof(REAL));
+            input->pos_init_params = (REAL**)malloc((input->n_species)*sizeof(REAL*));
+            input->mom_init_params = (REAL**)malloc((input->n_species)*sizeof(REAL*));
+            REAL* aux_pos_init_params = (REAL*)calloc(input->n_species * NPARAMS, sizeof(REAL));
+            REAL* aux_mom_init_params = (REAL*)calloc(input->n_species * NPARAMS, sizeof(REAL));
 
 
             for (int i = 0; i < input->n_species; ++i){
@@ -687,8 +687,8 @@ input_t* read_input(const char* name, int rank, int size){
             }
 
 
-            input->pos_inits = malloc((input->n_species)*sizeof(init_t));
-            input->mom_inits = malloc((input->n_species)*sizeof(init_t));
+            input->pos_inits = (init_t*)malloc((input->n_species)*sizeof(init_t));
+            input->mom_inits = (init_t*)malloc((input->n_species)*sizeof(init_t));
 
         }
 
@@ -696,38 +696,38 @@ input_t* read_input(const char* name, int rank, int size){
             
             input->n_fields = atoi(num_part);
 
-            input->kernel_names = malloc(input->n_fields * sizeof(char*));
-            input->force_names = malloc(input->n_fields * sizeof(char*));
-            input->field_type = malloc(input->n_fields * sizeof(char*));
+            input->kernel_names = (char**)malloc(input->n_fields * sizeof(char*));
+            input->force_names = (char**)malloc(input->n_fields * sizeof(char*));
+            input->field_type = (char**)malloc(input->n_fields * sizeof(char*));
 
             for (int i = 0; i < input->n_fields; ++i){
-                input->kernel_names[i] = calloc(STR_SIZE, sizeof(char));
-                input->force_names[i] = calloc(STR_SIZE, sizeof(char));
-                input->field_type[i] = calloc(STR_SIZE, sizeof(char));
+                input->kernel_names[i] = (char*)calloc(STR_SIZE, sizeof(char));
+                input->force_names[i] = (char*)calloc(STR_SIZE, sizeof(char));
+                input->field_type[i] = (char*)calloc(STR_SIZE, sizeof(char));
             } 
 
-            input->kernels = malloc((input->n_fields)*sizeof(kernel_t));
-            input->forces = malloc((input->n_fields)*sizeof(force_t));
+            input->kernels = (kernel_t*)malloc((input->n_fields)*sizeof(kernel_t));
+            input->forces = (force_t*)malloc((input->n_fields)*sizeof(force_t));
 
-            input->force_charges[0] = malloc(input->n_species * input->n_fields * sizeof(REAL));
+            input->force_charges[0] = (REAL*)malloc(input->n_species * input->n_fields * sizeof(REAL));
             for (int i = 1; i < input->n_species; ++i){
                 input->force_charges[i] = input->force_charges[0] + i*input->n_fields;
             }
-            input->source_charges[0] = malloc(input->n_species * input->n_fields * sizeof(REAL));
+            input->source_charges[0] = (REAL*)malloc(input->n_species * input->n_fields * sizeof(REAL));
             for (int i = 1; i < input->n_species; ++i){
                 input->source_charges[i] = input->source_charges[0] + i*input->n_fields;
             }
-            input->source_moments[0] = malloc(input->n_species * input->n_fields * sizeof(int));
+            input->source_moments[0] = (int*)malloc(input->n_species * input->n_fields * sizeof(int));
             for (int i = 1; i < input->n_species; ++i){
                 input->source_moments[i] = input->source_moments[0] + i*input->n_fields;
             }
 
-            input->field_init_names=malloc((input->n_fields)*sizeof(char*));
-            char* aux_field_init_names = calloc((input->n_fields) * STR_SIZE, sizeof(char));
+            input->field_init_names=(char**)malloc((input->n_fields)*sizeof(char*));
+            char* aux_field_init_names = (char*)calloc((input->n_fields) * STR_SIZE, sizeof(char));
 
-            field_parameters = malloc(input->n_fields * NPARAMS * sizeof(REAL));
-            input->field_init_params = malloc((input->n_fields)*sizeof(REAL*));
-            REAL* aux_field_init_params = calloc(input->n_fields * NPARAMS, sizeof(REAL));
+            field_parameters = (REAL*)malloc(input->n_fields * NPARAMS * sizeof(REAL));
+            input->field_init_params = (REAL**)malloc((input->n_fields)*sizeof(REAL*));
+            REAL* aux_field_init_params = (REAL*)calloc(input->n_fields * NPARAMS, sizeof(REAL));
 
 
             for (int i = 0; i < input->n_fields; ++i){
@@ -736,12 +736,12 @@ input_t* read_input(const char* name, int rank, int size){
             }
 
 
-            input->field_inits = malloc((input->n_fields)*sizeof(init_t));
+            input->field_inits = (init_t*)malloc((input->n_fields)*sizeof(init_t));
             
             for(int dim = 0; dim < input->pos_dims; ++dim){
-                input->field_matrix[dim] = malloc(input->n_fields * sizeof(REAL*));
+                input->field_matrix[dim] = (REAL**)malloc(input->n_fields * sizeof(REAL*));
             }
-            input->field_matrix[0][0] = malloc(input->pos_dims * input->n_fields * input->n_fields * sizeof(REAL));
+            input->field_matrix[0][0] = (REAL*)malloc(input->pos_dims * input->n_fields * input->n_fields * sizeof(REAL));
             for(int dim = 0; dim < input->pos_dims; ++dim){
                 for(int fld = 0; fld < input->n_fields; ++fld){
                     input->field_matrix[dim][fld] = input->field_matrix[0][0] + fld * input->n_fields + dim * input->n_fields * input->n_fields;
@@ -749,15 +749,15 @@ input_t* read_input(const char* name, int rank, int size){
             }
 
 
-            input->field_bounds = malloc((input->n_fields)*sizeof(fbound_t*));
-            input->field_bounds[0] = malloc((input->n_fields * input->pos_dims)*sizeof(fbound_t));
+            input->field_bounds = (fbound_t**)malloc((input->n_fields)*sizeof(fbound_t*));
+            input->field_bounds[0] = (fbound_t*)malloc((input->n_fields * input->pos_dims)*sizeof(fbound_t));
 
             for(int i = 0; i < input->n_fields; ++i){
                 input->field_bounds[i] = input->field_bounds[0] + input->pos_dims * i;
             }
 
-            input->field_bound_names=malloc((input->n_fields * input->pos_dims)*sizeof(char*));
-            char* aux2_bound_names = calloc((input->n_fields * input->pos_dims) * STR_SIZE, sizeof(char));
+            input->field_bound_names=(char**)malloc((input->n_fields * input->pos_dims)*sizeof(char*));
+            char* aux2_bound_names = (char*)calloc((input->n_fields * input->pos_dims) * STR_SIZE, sizeof(char));
             
             for (int i = 0; i < input->pos_dims*input->n_fields; ++i){
                 input->field_bound_names[i] = aux2_bound_names + i*STR_SIZE;
@@ -789,7 +789,7 @@ input_t* read_input(const char* name, int rank, int size){
         if(!strcmp(txt_part,"MOM_PARAMS")) mom_parameters[count] = atof(num_part);
         if(!strcmp(txt_part,"FIELD_PARAMS")) field_parameters[count] = atof(num_part);
         if(!strcmp(txt_part,"FILENAME")) strcpy(input->filename, num_part);
-        if(!strcmp(txt_part,"OPER")) strcpy(input->operator, num_part);
+        if(!strcmp(txt_part,"OPER")) strcpy(input->push_operator, num_part);
         if(!strcmp(txt_part,"POS_DIAG_FREQ")) input->pos_diag_freq = atoi(num_part);
         if(!strcmp(txt_part,"MOM_DIAG_FREQ")) input->mom_diag_freq = atoi(num_part);
         if(!strcmp(txt_part,"PADDING")) input->padding = atoi(num_part);
@@ -853,7 +853,7 @@ void print_input(input_t* input){
         printf("Dispersion Relation for species %d: %s\n", i, input->dispersion_names[i]);
     }
     printf("Time-advancing algorithm = %s\n", input->pusher);
-    printf("Space-operator algorithm = %s\n", input->operator);
+    printf("Space-operator algorithm = %s\n", input->push_operator);
 }
 
 void free_input(input_t* input){
@@ -879,7 +879,7 @@ void free_input(input_t* input){
     free(input->dispersion_names);
     free(input->dispersions);
     free(input->pusher);
-    free(input->operator);
+    free(input->push_operator);
     for (int i = 0; i < input->n_fields; ++i){
         free(input->kernel_names[i]);
         free(input->force_names[i]);

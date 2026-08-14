@@ -21,8 +21,8 @@ void inverseFourierTransform(int n_dims, int* N, double complex* ft, double comp
 
 void FFTConvolution(int n_dims, int* N, double complex* f1, double complex* f2, double complex* g0);
 
-void hadamardProduct(int n_dims, int* N, double complex* f1, double complex* f2, double complex* g0);
-void kroneckerProduct(int n_dims, int* N1, int* N2, double complex* f1, double complex* f2, double complex* g0);
-void tensorProduct(int n_dims, int* N, double complex* f1, double complex* f2, double complex* g0);
+__host__ __device__ void hadamardProduct(int n_dims, int* N, double complex* f1, double complex* f2, double complex* g0);
+__host__ __device__ void kroneckerProduct(int n_dims, int* N1, int* N2, double complex* f1, double complex* f2, double complex* g0);
+__host__ __device__ void tensorProduct(int n_dims, int* N, double complex* f1, double complex* f2, double complex* g0);
 
 #endif

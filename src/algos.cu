@@ -29,8 +29,8 @@ void LUdecomp(REAL** A, REAL** L, REAL** U, int N){
 
 void LUinverse(REAL** A, REAL** L, REAL** U, int N){
     
-    REAL* Bcol=malloc(N*sizeof(REAL));
-    REAL* Icol=malloc(N*sizeof(REAL));
+    REAL* Bcol=(REAL*)malloc(N*sizeof(REAL));
+    REAL* Icol=(REAL*)malloc(N*sizeof(REAL));
     
     for(int i=0; i<N; ++i){ //loop for each column of the inverse matrix (Bcol)
         for(int j=0; j<N; ++j){ //loop to fill Icol
@@ -54,7 +54,7 @@ void LUinverse(REAL** A, REAL** L, REAL** U, int N){
 
 void LUsolve(REAL** L, REAL** U, REAL* b, REAL* x, int N){
 
-    REAL* z = malloc(N*sizeof(REAL));
+    REAL* z = (REAL*)malloc(N*sizeof(REAL));
     
     //Solve L.z=b
     for(int i=0; i<N; ++i){
